@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "canisters": {
+    "directory": {
+      "main": "src/main.mo",
+      "type": "motoko"
+    }
+  },
+  "defaults": {
+    "build": {
+      "packtool": "mops sources"
+    }
+  }
+}
