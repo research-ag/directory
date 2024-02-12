@@ -1,13 +1,9 @@
 import Vector "mo:vector/Class";
 import RBTree "mo:base/RBTree";
 import Principal "mo:base/Principal";
-import Debug "mo:base/Debug";
 import Nat "mo:base/Nat";
 import Text "mo:base/Text";
 import Time "mo:base/Time";
-import Array "mo:base/Array";
-import Iter "mo:base/Iter";
-import Bool "mo:base/Bool";
 import Option "mo:base/Option";
 import Error "mo:base/Error";
 import Result "mo:base/Result";
