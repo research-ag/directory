@@ -5,7 +5,7 @@ module {
     name : Text;
     logo : Text;
     createdAt : Int;
-    modifiedAt : ?Int;
+    modifiedAt : Int;
   };
 
   public type CreateFungibleTokenPayload = {
