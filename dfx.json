@@ -3,7 +3,11 @@
   "canisters": {
     "directory": {
       "main": "src/main.mo",
-      "type": "motoko"
+      "type": "motoko",
+      "declarations": {
+        "bindings": ["js", "ts"],
+        "output": "./declarations"
+      }
     }
   },
   "defaults": {
