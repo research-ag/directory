@@ -151,14 +151,10 @@ actor class Directory(initialOwner : ?Principal) {
     ignore do ? { await* assertion.symbolLength(updatePayload.symbol!) };
     ignore do ? { await* assertion.nameLength(updatePayload.name!) };
     ignore do ? { await* assertion.validBase64Image(updatePayload.logo!) };
-
-    switch (updatePayload.symbol) {
-      case (?newSymbol) {
-        if (Text.toUppercase(newSymbol) != Text.toUppercase(token.symbol)) {
-          return throw Error.reject("Only symbol capitalization can be updated");
-        };
+    ignore do ? {
+      if (Text.toUppercase(updatePayload.symbol!) != Text.toUppercase(token.symbol)) {
+        throw Error.reject("Only symbol capitalization can be updated");
       };
-      case null {};
     };
 
     let updatedToken : Types.FungibleToken = {
