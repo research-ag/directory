@@ -20,9 +20,4 @@ module {
     name : ?Text;
     logo : ?Text;
   };
-
-  public type ValidateFungibleTokenPayload = {
-    symbol : ?Text;
-    name : ?Text;
-  };
 };
