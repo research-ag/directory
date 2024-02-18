@@ -166,7 +166,6 @@ actor class Directory(initialOwner : ?Principal) {
       symbol = Option.get(updatePayload.symbol, token.symbol);
       name = Option.get(updatePayload.name, token.name);
       logo = Option.get(updatePayload.logo, token.logo);
-      createdAt = token.createdAt;
       modifiedAt = Time.now();
     };
 
