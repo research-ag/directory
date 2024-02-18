@@ -11,8 +11,8 @@ import Result "mo:base/Result";
 import Types "./types"
 
 actor class Directory(initialOwner : ?Principal) {
-  private let ownersMap = RBTree.RBTree<Principal, ()>(Principal.compare);
-  private stable var stableOwnersMap = ownersMap.share();
+  let ownersMap = RBTree.RBTree<Principal, ()>(Principal.compare);
+  stable var stableOwnersMap = ownersMap.share();
 
   ignore do ? {
     ownersMap.put(initialOwner!, ());
@@ -20,16 +20,16 @@ actor class Directory(initialOwner : ?Principal) {
 
   type TokenIdx = Nat;
 
-  private let assetIdMap = RBTree.RBTree<Nat, TokenIdx>(Nat.compare);
-  private stable var stableAssetIdMap = assetIdMap.share();
+  let assetIdMap = RBTree.RBTree<Nat, TokenIdx>(Nat.compare);
+  stable var stableAssetIdMap = assetIdMap.share();
 
-  private let keyMap = RBTree.RBTree<Text, TokenIdx>(Text.compare);
-  private stable var stableKeyMap = keyMap.share();
+  let keyMap = RBTree.RBTree<Text, TokenIdx>(Text.compare);
+  stable var stableKeyMap = keyMap.share();
 
-  private let tokens = Vector.Vector<Types.FungibleToken>();
-  private stable var stableTokens = tokens.share();
+  let tokens = Vector.Vector<Types.FungibleToken>();
+  stable var stableTokens = tokens.share();
 
-  private let freezingPeriod = 86_400_000_000_000;
+  let freezingPeriod = 86_400_000_000_000;
 
   public query func getFreezingPeriod() : async Nat { freezingPeriod };
 
@@ -172,43 +172,43 @@ actor class Directory(initialOwner : ?Principal) {
     tokens.put(tokenIndex, updatedToken);
   };
 
-  private func assertOwnerAccess(principal : Principal) : async* () {
+  func assertOwnerAccess(principal : Principal) : async* () {
     if (ownersMap.get(principal) == null) {
       throw Error.reject("No Access for this principal " # Principal.toText(principal));
     };
   };
 
-  private func assertTokenNew(assetId : Nat, key : Text) : async* () {
+  func assertTokenNew(assetId : Nat, key : Text) : async* () {
     if (assetIdMap.get(assetId) != null) throw Error.reject("Asset id already exists");
     if (keyMap.get(key) != null) throw Error.reject("Token symbol already exists");
   };
 
-  private func assertTimeNotExpired(token : Types.FungibleToken) : async* () {
+  func assertTimeNotExpired(token : Types.FungibleToken) : async* () {
     if ((Time.now() - token.createdAt) >= freezingPeriod) {
       throw Error.reject("Time to correct token has expired");
     };
   };
 
-  private func assertSymbolLength(symbol : Text) : async* () {
+  func assertSymbolLength(symbol : Text) : async* () {
     if (symbol.size() >= 8) {
       throw Error.reject("Token symbol cannot be longer than 8 characters");
     };
   };
 
-  private func assertNameLength(name : Text) : async* () {
+  func assertNameLength(name : Text) : async* () {
     if (name.size() >= 64) {
       throw Error.reject("Token name cannot be longer than 64 characters");
     };
   };
 
-  private func assertValidBase64Image(base64String : Text) : async* () {
+  func assertValidBase64Image(base64String : Text) : async* () {
     switch (validateBase64Image(base64String)) {
       case (#ok()) {};
       case (#err(msg)) { throw Error.reject(msg) };
     };
   };
 
-  private func validateBase64Image(base64String : Text) : Result.Result<(), Text> {
+  func validateBase64Image(base64String : Text) : Result.Result<(), Text> {
     let pngPrefix = "data:image/png;base64,";
     let svgPrefix = "data:image/svg+xml;base64,";
     let jpegPrefix = "data:image/jpeg;base64,";
@@ -247,11 +247,11 @@ actor class Directory(initialOwner : ?Principal) {
     return #err("Token logo image must be passed in base64 format");
   };
 
-  private func isBase64Char(char : Char) : Bool {
+  func isBase64Char(char : Char) : Bool {
     return (char >= 'A' and char <= 'Z') or (char >= 'a' and char <= 'z') or (char >= '0' and char <= '9') or char == '+' or char == '/' or char == '=';
   };
 
-  private func notBase64Char(char : Char) : Bool {
+  func notBase64Char(char : Char) : Bool {
     return not isBase64Char(char);
   };
 
