@@ -26,7 +26,7 @@ module {
                 return #err("Token logo image must be no larger than 32 kB");
               };
 
-              if (Text.contains(data, #predicate(notBase64Char))) {
+              if (Text.contains(data, #predicate isNotBase64)) {
                 return #err("Token logo image is corrupted");
               };
 
@@ -41,11 +41,11 @@ module {
     return #err("Token logo image must be passed in base64 format");
   };
 
-  func isBase64Char(char : Char) : Bool {
-    (char >= 'A' and char <= 'Z') or (char >= 'a' and char <= 'z') or (char >= '0' and char <= '9') or char == '+' or char == '/' or char == '=';
+  func isBase64(c : Char) : Bool {
+    (c >= 'A' and c <= 'Z') or (c >= 'a' and c <= 'z') or (c >= '0' and c <= '9') or c == '+' or c == '/' or c == '=';
   };
 
-  func notBase64Char(char : Char) : Bool {
-    not isBase64Char(char);
+  func isNotBase64(c : Char) : Bool {
+    c > 'z' or (c < 'a' and c > 'Z') or (c < 'A' and c > '9') or (c < '/' and c != '+');
   };
 };
