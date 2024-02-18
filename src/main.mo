@@ -31,18 +31,20 @@ actor class Directory(initialOwner : ?Principal) {
 
   let freezingPeriod = 86_400_000_000_000;
 
-  public query func getFreezingPeriod() : async Nat { freezingPeriod };
+  public query func getFreezingPeriod() : async Nat {
+    freezingPeriod;
+  };
 
   public query func getTokens() : async [Types.FungibleToken] {
-    return Vector.toArray(tokens);
+    Vector.toArray(tokens);
   };
 
   public query func getTokenByAssetId(assetId : Nat) : async ?Types.FungibleToken {
-    return Option.map(assetIdMap.get(assetId), tokens.get);
+    Option.map(assetIdMap.get(assetId), tokens.get);
   };
 
   public query func getTokenBySymbol(symbol : Text) : async ?Types.FungibleToken {
-    return Option.map(keyMap.get(Text.toUppercase(symbol)), tokens.get);
+    Option.map(keyMap.get(Text.toUppercase(symbol)), tokens.get);
   };
 
   public shared ({ caller }) func addOwner(principal : Principal) : async () {
@@ -248,11 +250,11 @@ actor class Directory(initialOwner : ?Principal) {
   };
 
   func isBase64Char(char : Char) : Bool {
-    return (char >= 'A' and char <= 'Z') or (char >= 'a' and char <= 'z') or (char >= '0' and char <= '9') or char == '+' or char == '/' or char == '=';
+    (char >= 'A' and char <= 'Z') or (char >= 'a' and char <= 'z') or (char >= '0' and char <= '9') or char == '+' or char == '/' or char == '=';
   };
 
   func notBase64Char(char : Char) : Bool {
-    return not isBase64Char(char);
+    not isBase64Char(char);
   };
 
   system func preupgrade() {
