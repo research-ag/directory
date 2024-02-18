@@ -14,9 +14,7 @@ actor class Directory(initialOwner : ?Principal) {
   let ownersMap = RBTree.RBTree<Principal, ()>(Principal.compare);
   stable var stableOwnersMap = ownersMap.share();
 
-  ignore do ? {
-    ownersMap.put(initialOwner!, ());
-  };
+  ignore do ? { ownersMap.put(initialOwner!, ()) };
 
   type TokenIdx = Nat;
 
