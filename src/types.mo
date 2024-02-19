@@ -8,21 +8,16 @@ module {
     modifiedAt : Int;
   };
 
-  public type CreateFungibleTokenPayload = {
+  public type CreatePayload = {
     assetId : Nat;
     symbol : Text;
     name : Text;
     logo : Text;
   };
 
-  public type UpdateFungibleTokenPayload = {
+  public type UpdatePayload = {
     symbol : ?Text;
     name : ?Text;
     logo : ?Text;
-  };
-
-  public type ValidateFungibleTokenPayload = {
-    symbol : ?Text;
-    name : ?Text;
   };
 };
