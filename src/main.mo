@@ -192,7 +192,7 @@ actor class Directory(initialOwner : ?Principal) {
       if (symbol.size() > 8) {
         throw Error.reject("Token symbol cannot be longer than 8 characters");
       };
-      if (Text.contains(symbol, #predicate(func(c) { c > 'Z' or (c < 'A' and c > 'z') or (c < 'a' and c > '9') or (c < '0') }))) {
+      if (Text.contains(symbol, #predicate(func(c) { c > 'z' or (c < 'a' and c > 'Z') or (c < 'A' and c > '9') or (c < '0') }))) {
         throw Error.reject("Token symbol can only contain letters and digits");
       };
     };
