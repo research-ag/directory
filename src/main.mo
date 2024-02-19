@@ -181,13 +181,13 @@ actor class Directory(initialOwner : ?Principal) {
     };
 
     public func symbolLength(symbol : Text) : async* () {
-      if (symbol.size() >= 8) {
+      if (symbol.size() > 8) {
         throw Error.reject("Token symbol cannot be longer than 8 characters");
       };
     };
 
     public func nameLength(name : Text) : async* () {
-      if (name.size() >= 64) {
+      if (name.size() > 64) {
         throw Error.reject("Token name cannot be longer than 64 characters");
       };
     };
