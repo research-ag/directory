@@ -79,8 +79,11 @@ actor class Directory(initialOwner : ?Principal) {
     assetIdMap.put(assetId, newIndex);
     keyMap.put(key, newIndex);
 
-    { args with 
-    createdAt = Time.now(); modifiedAt = Time.now() }
+    {
+      args with
+      createdAt = Time.now();
+      modifiedAt = Time.now();
+    }
     |> tokens.add(_);
   };
 
