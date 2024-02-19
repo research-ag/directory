@@ -193,9 +193,6 @@ actor class Directory(initialOwner : ?Principal) {
       if (name.size() > 64) {
         throw Error.reject("Token name cannot be longer than 64 characters");
       };
-      if (Text.contains(name, #predicate(func(c) { c > '~' or c < ' ' }))) {
-        throw Error.reject("Token name can only contain printable ASCII characters");
-      };
     };
 
     public func validImage(image : Text) : async* () {
