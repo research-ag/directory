@@ -58,9 +58,9 @@ actor class Directory(initialOwner : ?Principal) {
     let key = Text.toUppercase(symbol);
 
     await* assertion.ownerAccess(caller);
-    await* assertion.symbolLength(symbol);
-    await* assertion.nameLength(name);
-    await* assertion.validBase64Image(logo);
+    await* assertion.validSymbol(symbol);
+    await* assertion.validName(name);
+    await* assertion.validImage(logo);
     await* assertion.tokenNew(assetId, key);
 
     let currentTime = Time.now();
@@ -80,7 +80,7 @@ actor class Directory(initialOwner : ?Principal) {
   /// Update symbol by asset id
   public shared ({ caller }) func correctSymbol(assetId : Nat, newSymbol : Text) : async () {
     await* assertion.ownerAccess(caller);
-    await* assertion.symbolLength(newSymbol);
+    await* assertion.validSymbol(newSymbol);
 
     let ?tokenIndex = assetIdMap.get(assetId) else throw Error.reject("Asset id does not exist");
     let token = tokens.get(tokenIndex);
@@ -141,9 +141,9 @@ actor class Directory(initialOwner : ?Principal) {
 
     // check update payload
     ignore do ? {
-      await* assertion.symbolLength(update.symbol!);
-      await* assertion.nameLength(update.name!);
-      await* assertion.validBase64Image(update.logo!);
+      await* assertion.validSymbol(update.symbol!);
+      await* assertion.validName(update.name!);
+      await* assertion.validImage(update.logo!);
       if (Text.toUppercase(update.symbol!) != Text.toUppercase(token.symbol)) {
         throw Error.reject("Only symbol capitalization can be updated");
       };
@@ -180,20 +180,26 @@ actor class Directory(initialOwner : ?Principal) {
       };
     };
 
-    public func symbolLength(symbol : Text) : async* () {
+    public func validSymbol(symbol : Text) : async* () {
       if (symbol.size() > 8) {
         throw Error.reject("Token symbol cannot be longer than 8 characters");
       };
-    };
-
-    public func nameLength(name : Text) : async* () {
-      if (name.size() > 64) {
-        throw Error.reject("Token name cannot be longer than 64 characters");
+      if (Text.contains(symbol, #predicate(func(c) { c > 'Z' or (c < 'A' and c > 'z') or (c < 'a' and c > '9') or (c < '0') }))) {
+        throw Error.reject("Token symbol can only contain letters and digits");
       };
     };
 
-    public func validBase64Image(base64String : Text) : async* () {
-      switch (Base64.validateImage(base64String)) {
+    public func validName(name : Text) : async* () {
+      if (name.size() > 64) {
+        throw Error.reject("Token name cannot be longer than 64 characters");
+      };
+      if (Text.contains(name, #predicate(func(c) { c > '~' or c < ' ' }))) {
+        throw Error.reject("Token name can only contain printable ASCII characters");
+      };
+    };
+
+    public func validImage(image : Text) : async* () {
+      switch (Base64.validateImage(image)) {
         case (#err msg) throw Error.reject(msg);
         case (_) {};
       };
