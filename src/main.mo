@@ -53,7 +53,7 @@ actor class Directory(initialOwner : ?Principal) {
     ownersMap.delete(principal);
   };
 
-  public shared ({ caller }) func addToken(args : Types.CreateFungibleTokenPayload) : async () {
+  public shared ({ caller }) func addToken(args : Types.CreatePayload) : async () {
     let { assetId; symbol; name; logo } = args;
     let key = Text.toUppercase(symbol);
 
@@ -132,7 +132,7 @@ actor class Directory(initialOwner : ?Principal) {
   };
 
   /// Update token info by asset id
-  public shared ({ caller }) func updateToken(assetId : Nat, updatePayload : Types.UpdateFungibleTokenPayload) : async () {
+  public shared ({ caller }) func updateToken(assetId : Nat, update : Types.UpdatePayload) : async () {
     await* assertion.ownerAccess(caller);
 
     // existing token
@@ -141,19 +141,19 @@ actor class Directory(initialOwner : ?Principal) {
 
     // check update payload
     ignore do ? {
-      await* assertion.symbolLength(updatePayload.symbol!);
-      await* assertion.nameLength(updatePayload.name!);
-      await* assertion.validBase64Image(updatePayload.logo!);
-      if (Text.toUppercase(updatePayload.symbol!) != Text.toUppercase(token.symbol)) {
+      await* assertion.symbolLength(update.symbol!);
+      await* assertion.nameLength(update.name!);
+      await* assertion.validBase64Image(update.logo!);
+      if (Text.toUppercase(update.symbol!) != Text.toUppercase(token.symbol)) {
         throw Error.reject("Only symbol capitalization can be updated");
       };
     };
 
     let updatedToken : Types.FungibleToken = {
       token with
-      symbol = Option.get(updatePayload.symbol, token.symbol);
-      name = Option.get(updatePayload.name, token.name);
-      logo = Option.get(updatePayload.logo, token.logo);
+      symbol = Option.get(update.symbol, token.symbol);
+      name = Option.get(update.name, token.name);
+      logo = Option.get(update.logo, token.logo);
       modifiedAt = Time.now();
     };
 
@@ -175,7 +175,7 @@ actor class Directory(initialOwner : ?Principal) {
     };
 
     public func timeNotExpired(token : Types.FungibleToken) : async* () {
-      if ((Time.now() - token.createdAt) >= freezingPeriod) {
+      if (Time.now() - token.createdAt >= freezingPeriod) {
         throw Error.reject("Time to correct token has expired");
       };
     };
@@ -194,8 +194,8 @@ actor class Directory(initialOwner : ?Principal) {
 
     public func validBase64Image(base64String : Text) : async* () {
       switch (Base64.validateImage(base64String)) {
-        case (#ok()) {};
-        case (#err(msg)) { throw Error.reject(msg) };
+        case (#err msg) throw Error.reject(msg);
+        case (_) {};
       };
     };
   };
