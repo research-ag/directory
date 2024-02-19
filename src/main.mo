@@ -7,6 +7,7 @@ import Time "mo:base/Time";
 import Option "mo:base/Option";
 import Error "mo:base/Error";
 import Result "mo:base/Result";
+import Iter "mo:base/Iter";
 import Types "./types";
 import Base64 "./base64";
 
@@ -26,6 +27,12 @@ actor class Directory(initialOwner : ?Principal) {
   ignore do ? { ownersMap.put(initialOwner!, ()) };
 
   let freezingPeriod_ = 86_400_000_000_000; // 1 day
+
+  public query func owners() : async [Principal] {
+    ownersMap.entries()
+    |> Iter.map<(Principal, ()), Principal>(_, func(x) = x.0)
+    |> Iter.toArray<Principal>(_);
+  };
 
   public query func freezingPeriod() : async Nat {
     freezingPeriod_;
