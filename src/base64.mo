@@ -2,43 +2,35 @@ import Result "mo:base/Result";
 import Text "mo:base/Text";
 
 module {
-  public func validateImage(base64String : Text) : Result.Result<(), Text> {
-    let pngPrefix = "data:image/png;base64,";
-    let svgPrefix = "data:image/svg+xml;base64,";
-    let jpegPrefix = "data:image/jpeg;base64,";
-
-    let prefixes : [Text] = [pngPrefix, svgPrefix, jpegPrefix];
-
-    for (prefix in prefixes.vals()) {
-      if (Text.startsWith(base64String, #text(prefix))) {
-        let imageData = Text.stripStart(base64String, #text(prefix));
-
-        switch (imageData) {
-          case (null) {
-            return #err("Token logo image is corrupted");
-          };
-          case (?data) {
-            if (Text.size(data) > 0) {
-              let encodedSize = Text.size(data);
-              let decodedSize = (encodedSize * 3) / 4;
-
-              if (decodedSize > 32_000) {
-                return #err("Token logo image must be no larger than 32 kB");
-              };
-
-              if (Text.contains(data, #predicate isNotBase64)) {
-                return #err("Token logo image is corrupted");
-              };
-
-              return #ok();
-            };
-          };
-        };
-
+  func stripAnyPrefix(str : Text, prefixes : [Text]) : ?Text {
+    for (p in prefixes.vals()) {
+      if (Text.startsWith(str, #text p)) {
+        return Text.stripStart(str, #text p);
       };
     };
+    return null;
+  };
 
-    return #err("Token logo image must be passed in base64 format");
+  public func validateImage(imageStr : Text) : Result.Result<(), Text> {
+    let ?data = stripAnyPrefix(
+      imageStr,
+      [
+        "data:image/png;base64,",
+        "data:image/svg+xml;base64,",
+        "data:image/jpeg;base64,",
+      ],
+    ) else return #err("Logo image must be in PNG, JPEG, or SVG format");
+
+    let byteSize = (Text.size(data) * 3) / 4;
+    if (byteSize > 32_768) {
+      return #err("Logo image must be no larger than 32 kB");
+    };
+
+    if (Text.contains(data, #predicate isNotBase64)) {
+      return #err("Logo image is corrupted");
+    };
+
+    return #ok();
   };
 
   func isBase64(c : Char) : Bool {
