@@ -1,15 +1,16 @@
-import Vector "mo:vector/Class";
-import RBTree "mo:base/RBTree";
-import Principal "mo:base/Principal";
+import Error "mo:base/Error";
+import Iter "mo:base/Iter";
 import Nat "mo:base/Nat";
+import Option "mo:base/Option";
+import Principal "mo:base/Principal";
+import RBTree "mo:base/RBTree";
+import Result "mo:base/Result";
 import Text "mo:base/Text";
 import Time "mo:base/Time";
-import Option "mo:base/Option";
-import Error "mo:base/Error";
-import Result "mo:base/Result";
-import Iter "mo:base/Iter";
-import Types "./types";
+import Vector "mo:vector/Class";
+
 import Base64 "./base64";
+import Types "./types";
 
 actor class Directory(initialOwner : ?Principal) {
   type TokenIdx = Nat;

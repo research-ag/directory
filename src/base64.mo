@@ -1,7 +1,7 @@
-import Result "mo:base/Result";
-import Text "mo:base/Text";
 import Array "mo:base/Array";
 import Debug "mo:base/Debug";
+import Result "mo:base/Result";
+import Text "mo:base/Text";
 
 module {
   public func validateImage(imageStr : Text) : Result.Result<(), Text> {
@@ -25,7 +25,7 @@ module {
       return #err("Logo image is corrupted");
     };
 
-    return #ok();
+    return #ok;
   };
 
   func isBase64(c : Char) : Bool {
