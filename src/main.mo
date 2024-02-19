@@ -11,23 +11,21 @@ import Types "./types";
 import Base64 "./base64";
 
 actor class Directory(initialOwner : ?Principal) {
+  type TokenIdx = Nat;
+
   let ownersMap = RBTree.RBTree<Principal, ()>(Principal.compare);
+  let assetIdMap = RBTree.RBTree<Nat, TokenIdx>(Nat.compare);
+  let keyMap = RBTree.RBTree<Text, TokenIdx>(Text.compare);
+  let tokens = Vector.Vector<Types.FungibleToken>();
+
   stable var stableOwnersMap = ownersMap.share();
+  stable var stableAssetIdMap = assetIdMap.share();
+  stable var stableKeyMap = keyMap.share();
+  stable var stableTokens = tokens.share();
 
   ignore do ? { ownersMap.put(initialOwner!, ()) };
 
-  type TokenIdx = Nat;
-
-  let assetIdMap = RBTree.RBTree<Nat, TokenIdx>(Nat.compare);
-  stable var stableAssetIdMap = assetIdMap.share();
-
-  let keyMap = RBTree.RBTree<Text, TokenIdx>(Text.compare);
-  stable var stableKeyMap = keyMap.share();
-
-  let tokens = Vector.Vector<Types.FungibleToken>();
-  stable var stableTokens = tokens.share();
-
-  let freezingPeriod = 86_400_000_000_000;
+  let freezingPeriod = 86_400_000_000_000; // 1 day
 
   public query func getFreezingPeriod() : async Nat {
     freezingPeriod;
@@ -82,17 +80,14 @@ actor class Directory(initialOwner : ?Principal) {
   /// Update symbol by asset id
   public shared ({ caller }) func correctSymbol(assetId : Nat, newSymbol : Text) : async () {
     await* assertion.ownerAccess(caller);
-
-    let ?tokenIndex = assetIdMap.get(assetId) else throw Error.reject("Asset id does not exist");
-
     await* assertion.symbolLength(newSymbol);
 
+    let ?tokenIndex = assetIdMap.get(assetId) else throw Error.reject("Asset id does not exist");
     let token = tokens.get(tokenIndex);
-
-    await* assertion.timeNotExpired(token);
-
     let prevKey = Text.toUppercase(token.symbol);
     let newKey = Text.toUppercase(newSymbol);
+
+    await* assertion.timeNotExpired(token);
 
     if (newSymbol == token.symbol) throw Error.reject("New token symbol is the same as the current one");
 
@@ -116,15 +111,12 @@ actor class Directory(initialOwner : ?Principal) {
     await* assertion.ownerAccess(caller);
 
     let key = Text.toUppercase(symbol);
-
     let ?tokenIndex = keyMap.get(key) else throw Error.reject("Symbol does not exist");
-
     let token = tokens.get(tokenIndex);
 
     await* assertion.timeNotExpired(token);
 
     if (newAssetId == token.assetId) throw Error.reject("New asset id is the same as the current one");
-
     if (assetIdMap.get(newAssetId) != null) throw Error.reject("New asset id already exists");
 
     assetIdMap.delete(token.assetId);
@@ -148,10 +140,10 @@ actor class Directory(initialOwner : ?Principal) {
     let token = tokens.get(tokenIndex);
 
     // check update payload
-    ignore do ? { 
-      await* assertion.symbolLength(updatePayload.symbol!); 
-      await* assertion.nameLength(updatePayload.name!); 
-      await* assertion.validBase64Image(updatePayload.logo!); 
+    ignore do ? {
+      await* assertion.symbolLength(updatePayload.symbol!);
+      await* assertion.nameLength(updatePayload.name!);
+      await* assertion.validBase64Image(updatePayload.logo!);
       if (Text.toUppercase(updatePayload.symbol!) != Text.toUppercase(token.symbol)) {
         throw Error.reject("Only symbol capitalization can be updated");
       };
@@ -221,4 +213,5 @@ actor class Directory(initialOwner : ?Principal) {
     keyMap.unshare(stableKeyMap);
     tokens.unshare(stableTokens);
   };
+
 };
