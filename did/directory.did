@@ -1,7 +1,7 @@
 /// Creating a new token requires:
 ///
 /// * the HPL asset id
-/// * a symbol of up to 8 characters
+/// * a symbol of up to 8 characters made up of letters and digits
 /// * a name of up to 32 characters
 /// * a base64-encoded logo image in format png, jpeg or svg
 type CreateArgument = record {
