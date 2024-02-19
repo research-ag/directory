@@ -1,20 +1,20 @@
 import Array "mo:base/Array";
-import Debug "mo:base/Debug";
 import Result "mo:base/Result";
 import Text "mo:base/Text";
 
 module {
   public func validateImage(imageStr : Text) : Result.Result<(), Text> {
-    let ?prefix = Array.find<Text>(
-      [
-        "data:image/png;base64,",
-        "data:image/svg+xml;base64,",
-        "data:image/jpeg;base64,",
-      ],
-      func(p) = Text.startsWith(imageStr, #text p),
-    ) else return #err("Logo image must be in PNG, JPEG, or SVG format");
-
-    let ?data = Text.stripStart(imageStr, #text prefix) else Debug.trap("cannot happen");
+    let ?data = do ? {
+      Array.find<Text>(
+        [
+          "data:image/png;base64,",
+          "data:image/svg+xml;base64,",
+          "data:image/jpeg;base64,",
+        ],
+        func(x) = Text.startsWith(imageStr, #text x),
+      )!
+      |> Text.stripStart(imageStr, #text _)!;
+    } else return #err("Logo image must be in PNG, JPEG, or SVG format");
 
     let byteSize = (Text.size(data) * 3) / 4;
     if (byteSize > 32_768) {
