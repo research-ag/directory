@@ -25,21 +25,21 @@ actor class Directory(initialOwner : ?Principal) {
 
   ignore do ? { ownersMap.put(initialOwner!, ()) };
 
-  let freezingPeriod = 86_400_000_000_000; // 1 day
+  let freezingPeriod_ = 86_400_000_000_000; // 1 day
 
-  public query func getFreezingPeriod() : async Nat {
-    freezingPeriod;
+  public query func freezingPeriod() : async Nat {
+    freezingPeriod_;
   };
 
-  public query func getTokens() : async [Types.FungibleToken] {
+  public query func allTokens() : async [Types.FungibleToken] {
     Vector.toArray(tokens);
   };
 
-  public query func getTokenByAssetId(assetId : Nat) : async ?Types.FungibleToken {
+  public query func tokenByAssetId(assetId : Nat) : async ?Types.FungibleToken {
     Option.map(assetIdMap.get(assetId), tokens.get);
   };
 
-  public query func getTokenBySymbol(symbol : Text) : async ?Types.FungibleToken {
+  public query func tokenBySymbol(symbol : Text) : async ?Types.FungibleToken {
     Option.map(keyMap.get(Text.toUppercase(symbol)), tokens.get);
   };
 
@@ -175,7 +175,7 @@ actor class Directory(initialOwner : ?Principal) {
     };
 
     public func timeNotExpired(token : Types.FungibleToken) : async* () {
-      if (Time.now() - token.createdAt >= freezingPeriod) {
+      if (Time.now() - token.createdAt >= freezingPeriod_) {
         throw Error.reject("Time to correct token has expired");
       };
     };
