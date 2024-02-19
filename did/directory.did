@@ -1,0 +1,119 @@
+/// Creating a new token requires:
+///
+/// * the HPL asset id
+/// * a symbol of up to 8 characters
+/// * a name of up to 32 characters
+/// * a base64-encoded logo image in format png, jpeg or svg
+type CreateArgument = record {
+  assetId : nat;
+  symbol : text;
+  name : text;
+  logo : text;
+};
+
+/// For an existing token name and logo can be updated after creation.
+/// The symbol capitalization can also be updated.
+type UpdateArgument = record {
+  symbol : opt text;
+  name : opt text;
+  logo : opt text;
+};
+
+/// This data about existing tokens can be retrieved.
+/// Timestamps are in nanoseconds.
+type FungibleToken = record {
+  assetId : nat;
+  symbol : text;
+  name : text;
+  logo : text;
+  createdAt : int;
+  modifiedAt : int;
+};
+
+service : (opt principal) -> {
+  /// All update functions can only be called by registered principals known as "owners", otherwise they will "throw".
+  /// The first owner must be supplied by the init argument at first deployment.
+  /// During an upgrade the previously exising owners are preserved and any new owner supplied as an init argument is ignored.
+
+  /// Add a new principal to the list of owners
+  ///
+  /// If the provided principal is already an owner, nothing happens.
+  addOwner : (principal) -> ();
+
+  /// Remove a principal from the list of owners
+  ///
+  /// If the provided principal is not an owner, nothing happens.
+  removeOwner : (principal) -> ();
+
+  /// Register a new token
+  ///
+  /// The function will "throw" if:
+  /// 
+  /// * any argument field is invalid
+  /// * the symbol is already in use
+  /// * the asset id is already in use
+  addToken : (CreateArgument) -> ();
+
+  /// Update an existing token
+  ///
+  /// The first argument is the asset id and is used to identify the token to be
+  /// updated.
+  ///
+  /// The function will "throw" if:
+  /// 
+  /// * the asset id is not known
+  /// * any field in the update argument is invalid
+  updateToken : (nat, UpdateArgument) -> ();
+
+  /// Correct an incorrect asset id
+  ///
+  /// The arguments are:
+  ///
+  /// * the symbol used to identify the token
+  /// * the new (corrected) asset id 
+  ///
+  /// This and the function below are intended for when a mistake happened
+  /// during registration of a new token. A correction can only be done during a
+  /// limited time period after registration (see getFreezingPeriod below).
+  ///
+  /// The functions throws if:
+  ///
+  /// * the symbol is not known
+  /// * the new asset id is the same as the current one
+  /// * the new asset id already belongs to a different symbol
+  correctAssetId : (text, nat) -> ();
+  
+  /// Correct an incorrect symbol
+  ///
+  /// The arguments are:
+  ///
+  /// * the asset id used to identify the token
+  /// * the new (corrected) symbol 
+  ///
+  /// The functions throws if:
+  ///
+  /// * the asset id is not known
+  /// * the new symbol is the same as the current one
+  /// * the new symbol already belongs to a different asset id
+  correctSymbol : (nat, text) -> ();
+
+  /// Query functions can be called by anyone.
+
+  /// Get registered token information by its asset id
+  ///
+  /// The function returns null if the asset id is not known.
+  getTokenByAssetId : (nat) -> (opt FungibleToken) query;
+
+  /// Get registered token information by its symbol
+  ///
+  /// The function returns null if the symbol is not known.
+  getTokenBySymbol : (text) -> (opt FungibleToken) query;
+
+  /// Get a dump of all registered tokens
+  ///
+  /// If no tokens are registered, the function returns an empty vector.
+  getTokens : () -> (vec FungibleToken) query;
+
+  /// Get the freezing period in nanoseconds (should be 24h)
+  getFreezingPeriod : () -> (nat) query;
+};
