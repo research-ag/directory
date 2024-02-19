@@ -3,7 +3,8 @@
   "canisters": {
     "directory": {
       "main": "src/main.mo",
-      "type": "motoko"
+      "type": "motoko",
+      "init_arg": "(opt principal \"2vxsx-fae\")" 
     }
   },
   "defaults": {
