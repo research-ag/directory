@@ -38,6 +38,10 @@ actor class Directory(initialOwner : ?Principal) {
     freezingPeriod_;
   };
 
+  public query func nTokens() : async Nat {
+    tokens.size();
+  };
+
   public query func allTokens() : async [Types.FungibleToken] {
     Vector.toArray(tokens);
   };
