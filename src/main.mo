@@ -74,18 +74,13 @@ actor class Directory(initialOwner : ?Principal) {
     await* assertion.validImage(logo);
     await* assertion.tokenNew(assetId, key);
 
-    let currentTime = Time.now();
+    let newIndex = tokens.size();
+    assetIdMap.put(assetId, newIndex);
+    keyMap.put(key, newIndex);
 
-    let token : Types.FungibleToken = {
-      args with
-      createdAt = currentTime;
-      modifiedAt = currentTime;
-    };
-
-    let tokensSize = tokens.size();
-    assetIdMap.put(assetId, tokensSize);
-    keyMap.put(key, tokensSize);
-    tokens.add(token);
+    { args with 
+    createdAt = Time.now(); modifiedAt = Time.now() }
+    |> tokens.add(_);
   };
 
   /// Update symbol by asset id
@@ -93,8 +88,8 @@ actor class Directory(initialOwner : ?Principal) {
     await* assertion.ownerAccess(caller);
     await* assertion.validSymbol(newSymbol);
 
-    let ?tokenIndex = assetIdMap.get(assetId) else throw Error.reject("Asset id does not exist");
-    let token = tokens.get(tokenIndex);
+    let ?index = assetIdMap.get(assetId) else throw Error.reject("Asset id does not exist");
+    let token = tokens.get(index);
     let prevKey = Text.toUppercase(token.symbol);
     let newKey = Text.toUppercase(newSymbol);
 
@@ -105,16 +100,15 @@ actor class Directory(initialOwner : ?Principal) {
     if (prevKey != newKey) {
       if (keyMap.get(newKey) != null) throw Error.reject("New token symbol already exists");
       keyMap.delete(prevKey);
-      keyMap.put(newKey, tokenIndex);
+      keyMap.put(newKey, index);
     };
 
-    let updatedToken : Types.FungibleToken = {
+    {
       token with
       symbol = newSymbol;
       modifiedAt = Time.now();
-    };
-
-    tokens.put(tokenIndex, updatedToken);
+    }
+    |> tokens.put(index, _);
   };
 
   /// Update asset id by symbol
@@ -122,8 +116,8 @@ actor class Directory(initialOwner : ?Principal) {
     await* assertion.ownerAccess(caller);
 
     let key = Text.toUppercase(symbol);
-    let ?tokenIndex = keyMap.get(key) else throw Error.reject("Symbol does not exist");
-    let token = tokens.get(tokenIndex);
+    let ?index = keyMap.get(key) else throw Error.reject("Symbol does not exist");
+    let token = tokens.get(index);
 
     await* assertion.timeNotExpired(token);
 
@@ -131,15 +125,14 @@ actor class Directory(initialOwner : ?Principal) {
     if (assetIdMap.get(newAssetId) != null) throw Error.reject("New asset id already exists");
 
     assetIdMap.delete(token.assetId);
-    assetIdMap.put(newAssetId, tokenIndex);
+    assetIdMap.put(newAssetId, index);
 
-    let updatedToken : Types.FungibleToken = {
+    {
       token with
       assetId = newAssetId;
       modifiedAt = Time.now();
-    };
-
-    tokens.put(tokenIndex, updatedToken);
+    }
+    |> tokens.put(index, _);
   };
 
   /// Update token info by asset id
@@ -147,8 +140,8 @@ actor class Directory(initialOwner : ?Principal) {
     await* assertion.ownerAccess(caller);
 
     // existing token
-    let ?tokenIndex = assetIdMap.get(assetId) else throw Error.reject("Asset id does not exist");
-    let token = tokens.get(tokenIndex);
+    let ?index = assetIdMap.get(assetId) else throw Error.reject("Asset id does not exist");
+    let token = tokens.get(index);
 
     // check update payload
     ignore do ? {
@@ -160,15 +153,15 @@ actor class Directory(initialOwner : ?Principal) {
       };
     };
 
-    let updatedToken : Types.FungibleToken = {
+    {
       token with
       symbol = Option.get(update.symbol, token.symbol);
       name = Option.get(update.name, token.name);
       logo = Option.get(update.logo, token.logo);
       modifiedAt = Time.now();
-    };
+    }
+    |> tokens.put(index, _);
 
-    tokens.put(tokenIndex, updatedToken);
   };
 
   let assertion = module {
