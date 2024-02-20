@@ -1,25 +1,20 @@
+import Array "mo:base/Array";
 import Result "mo:base/Result";
 import Text "mo:base/Text";
 
 module {
-  func stripAnyPrefix(str : Text, prefixes : [Text]) : ?Text {
-    for (p in prefixes.vals()) {
-      if (Text.startsWith(str, #text p)) {
-        return Text.stripStart(str, #text p);
-      };
-    };
-    return null;
-  };
-
   public func validateImage(imageStr : Text) : Result.Result<(), Text> {
-    let ?data = stripAnyPrefix(
-      imageStr,
-      [
-        "data:image/png;base64,",
-        "data:image/svg+xml;base64,",
-        "data:image/jpeg;base64,",
-      ],
-    ) else return #err("Logo image must be in PNG, JPEG, or SVG format");
+    let ?data = do ? {
+      Array.find<Text>(
+        [
+          "data:image/png;base64,",
+          "data:image/svg+xml;base64,",
+          "data:image/jpeg;base64,",
+        ],
+        func(x) = Text.startsWith(imageStr, #text x),
+      )!
+      |> Text.stripStart(imageStr, #text _)!;
+    } else return #err("Logo image must be in PNG, JPEG, or SVG format");
 
     let byteSize = (Text.size(data) * 3) / 4;
     if (byteSize > 32_768) {
@@ -30,7 +25,7 @@ module {
       return #err("Logo image is corrupted");
     };
 
-    return #ok();
+    return #ok;
   };
 
   func isBase64(c : Char) : Bool {

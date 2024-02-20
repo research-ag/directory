@@ -1,14 +1,16 @@
-import Vector "mo:vector/Class";
-import RBTree "mo:base/RBTree";
-import Principal "mo:base/Principal";
+import Error "mo:base/Error";
+import Iter "mo:base/Iter";
 import Nat "mo:base/Nat";
+import Option "mo:base/Option";
+import Principal "mo:base/Principal";
+import RBTree "mo:base/RBTree";
+import Result "mo:base/Result";
 import Text "mo:base/Text";
 import Time "mo:base/Time";
-import Option "mo:base/Option";
-import Error "mo:base/Error";
-import Result "mo:base/Result";
-import Types "./types";
+import Vector "mo:vector/Class";
+
 import Base64 "./base64";
+import Types "./types";
 
 actor class Directory(initialOwner : ?Principal) {
   type TokenIdx = Nat;
@@ -25,21 +27,31 @@ actor class Directory(initialOwner : ?Principal) {
 
   ignore do ? { ownersMap.put(initialOwner!, ()) };
 
-  let freezingPeriod = 86_400_000_000_000; // 1 day
+  let freezingPeriod_ = 86_400_000_000_000; // 1 day
 
-  public query func getFreezingPeriod() : async Nat {
-    freezingPeriod;
+  public query func owners() : async [Principal] {
+    ownersMap.entries()
+    |> Iter.map<(Principal, ()), Principal>(_, func(x) = x.0)
+    |> Iter.toArray<Principal>(_);
   };
 
-  public query func getTokens() : async [Types.FungibleToken] {
+  public query func freezingPeriod() : async Nat {
+    freezingPeriod_;
+  };
+
+  public query func nTokens() : async Nat {
+    tokens.size();
+  };
+
+  public query func allTokens() : async [Types.FungibleToken] {
     Vector.toArray(tokens);
   };
 
-  public query func getTokenByAssetId(assetId : Nat) : async ?Types.FungibleToken {
+  public query func tokenByAssetId(assetId : Nat) : async ?Types.FungibleToken {
     Option.map(assetIdMap.get(assetId), tokens.get);
   };
 
-  public query func getTokenBySymbol(symbol : Text) : async ?Types.FungibleToken {
+  public query func tokenBySymbol(symbol : Text) : async ?Types.FungibleToken {
     Option.map(keyMap.get(Text.toUppercase(symbol)), tokens.get);
   };
 
@@ -63,18 +75,16 @@ actor class Directory(initialOwner : ?Principal) {
     await* assertion.validImage(logo);
     await* assertion.tokenNew(assetId, key);
 
-    let currentTime = Time.now();
+    let newIndex = tokens.size();
+    assetIdMap.put(assetId, newIndex);
+    keyMap.put(key, newIndex);
 
-    let token : Types.FungibleToken = {
+    {
       args with
-      createdAt = currentTime;
-      modifiedAt = currentTime;
-    };
-
-    let tokensSize = tokens.size();
-    assetIdMap.put(assetId, tokensSize);
-    keyMap.put(key, tokensSize);
-    tokens.add(token);
+      createdAt = Time.now();
+      modifiedAt = Time.now();
+    }
+    |> tokens.add(_);
   };
 
   /// Update symbol by asset id
@@ -82,8 +92,8 @@ actor class Directory(initialOwner : ?Principal) {
     await* assertion.ownerAccess(caller);
     await* assertion.validSymbol(newSymbol);
 
-    let ?tokenIndex = assetIdMap.get(assetId) else throw Error.reject("Asset id does not exist");
-    let token = tokens.get(tokenIndex);
+    let ?index = assetIdMap.get(assetId) else throw Error.reject("Asset id does not exist");
+    let token = tokens.get(index);
     let prevKey = Text.toUppercase(token.symbol);
     let newKey = Text.toUppercase(newSymbol);
 
@@ -94,16 +104,15 @@ actor class Directory(initialOwner : ?Principal) {
     if (prevKey != newKey) {
       if (keyMap.get(newKey) != null) throw Error.reject("New token symbol already exists");
       keyMap.delete(prevKey);
-      keyMap.put(newKey, tokenIndex);
+      keyMap.put(newKey, index);
     };
 
-    let updatedToken : Types.FungibleToken = {
+    {
       token with
       symbol = newSymbol;
       modifiedAt = Time.now();
-    };
-
-    tokens.put(tokenIndex, updatedToken);
+    }
+    |> tokens.put(index, _);
   };
 
   /// Update asset id by symbol
@@ -111,8 +120,8 @@ actor class Directory(initialOwner : ?Principal) {
     await* assertion.ownerAccess(caller);
 
     let key = Text.toUppercase(symbol);
-    let ?tokenIndex = keyMap.get(key) else throw Error.reject("Symbol does not exist");
-    let token = tokens.get(tokenIndex);
+    let ?index = keyMap.get(key) else throw Error.reject("Symbol does not exist");
+    let token = tokens.get(index);
 
     await* assertion.timeNotExpired(token);
 
@@ -120,15 +129,14 @@ actor class Directory(initialOwner : ?Principal) {
     if (assetIdMap.get(newAssetId) != null) throw Error.reject("New asset id already exists");
 
     assetIdMap.delete(token.assetId);
-    assetIdMap.put(newAssetId, tokenIndex);
+    assetIdMap.put(newAssetId, index);
 
-    let updatedToken : Types.FungibleToken = {
+    {
       token with
       assetId = newAssetId;
       modifiedAt = Time.now();
-    };
-
-    tokens.put(tokenIndex, updatedToken);
+    }
+    |> tokens.put(index, _);
   };
 
   /// Update token info by asset id
@@ -136,8 +144,8 @@ actor class Directory(initialOwner : ?Principal) {
     await* assertion.ownerAccess(caller);
 
     // existing token
-    let ?tokenIndex = assetIdMap.get(assetId) else throw Error.reject("Asset id does not exist");
-    let token = tokens.get(tokenIndex);
+    let ?index = assetIdMap.get(assetId) else throw Error.reject("Asset id does not exist");
+    let token = tokens.get(index);
 
     // check update payload
     ignore do ? {
@@ -149,15 +157,15 @@ actor class Directory(initialOwner : ?Principal) {
       };
     };
 
-    let updatedToken : Types.FungibleToken = {
+    {
       token with
       symbol = Option.get(update.symbol, token.symbol);
       name = Option.get(update.name, token.name);
       logo = Option.get(update.logo, token.logo);
       modifiedAt = Time.now();
-    };
+    }
+    |> tokens.put(index, _);
 
-    tokens.put(tokenIndex, updatedToken);
   };
 
   let assertion = module {
@@ -175,7 +183,7 @@ actor class Directory(initialOwner : ?Principal) {
     };
 
     public func timeNotExpired(token : Types.FungibleToken) : async* () {
-      if (Time.now() - token.createdAt >= freezingPeriod) {
+      if (Time.now() - token.createdAt >= freezingPeriod_) {
         throw Error.reject("Time to correct token has expired");
       };
     };
@@ -184,7 +192,7 @@ actor class Directory(initialOwner : ?Principal) {
       if (symbol.size() > 8) {
         throw Error.reject("Token symbol cannot be longer than 8 characters");
       };
-      if (Text.contains(symbol, #predicate(func(c) { c > 'Z' or (c < 'A' and c > 'z') or (c < 'a' and c > '9') or (c < '0') }))) {
+      if (Text.contains(symbol, #predicate(func(c) { c > 'z' or (c < 'a' and c > 'Z') or (c < 'A' and c > '9') or (c < '0') }))) {
         throw Error.reject("Token symbol can only contain letters and digits");
       };
     };

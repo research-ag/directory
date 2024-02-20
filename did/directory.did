@@ -102,18 +102,24 @@ service : (opt principal) -> {
   /// Get registered token information by its asset id
   ///
   /// The function returns null if the asset id is not known.
-  getTokenByAssetId : (nat) -> (opt FungibleToken) query;
+  tokenByAssetId : (nat) -> (opt FungibleToken) query;
 
   /// Get registered token information by its symbol
   ///
   /// The function returns null if the symbol is not known.
-  getTokenBySymbol : (text) -> (opt FungibleToken) query;
+  tokenBySymbol : (text) -> (opt FungibleToken) query;
+
+  /// Get the number of registered tokens
+  nTokens : () -> (nat) query;
 
   /// Get a dump of all registered tokens
   ///
   /// If no tokens are registered, the function returns an empty vector.
-  getTokens : () -> (vec FungibleToken) query;
+  allTokens : () -> (vec FungibleToken) query;
 
   /// Get the freezing period in nanoseconds (should be 24h)
-  getFreezingPeriod : () -> (nat) query;
+  freezingPeriod : () -> (nat) query;
+
+  /// Get all owner's principals
+  owners : () -> (vec principal) query;
 };
