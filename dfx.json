@@ -4,7 +4,11 @@
     "directory": {
       "main": "src/main.mo",
       "type": "motoko",
-      "init_arg": "(opt principal \"2vxsx-fae\")" 
+      "init_arg": "(opt principal \"2vxsx-fae\")",
+      "declarations": {
+        "bindings": ["js", "ts"],
+        "output": "./declarations"
+      }
     }
   },
   "defaults": {

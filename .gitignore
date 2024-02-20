@@ -5,3 +5,5 @@
 **/.DS_Store
 .dfx
 .mops
+node_modules
+declarations
