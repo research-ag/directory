@@ -1,6 +1,6 @@
 import {
   FungibleToken,
-  CreateFungibleTokenPayload,
+  CreatePayload,
 } from "../../declarations/directory.did";
 import { bitcoinlogoBase64 } from "./base64Images";
 
@@ -13,7 +13,7 @@ export const btc: FungibleToken = {
   modifiedAt: BigInt(Date.now()),
 };
 
-export const btcCreatePayload: CreateFungibleTokenPayload = { ...btc };
+export const btcCreatePayload: CreatePayload = { ...btc };
 
 export const icp: FungibleToken = {
   assetId: BigInt(2),
@@ -24,7 +24,7 @@ export const icp: FungibleToken = {
   modifiedAt: BigInt(Date.now()),
 };
 
-export const icpCreatePayload: CreateFungibleTokenPayload = { ...icp };
+export const icpCreatePayload: CreatePayload = { ...icp };
 
 export const eth: FungibleToken = {
   assetId: BigInt(3),
@@ -35,4 +35,4 @@ export const eth: FungibleToken = {
   modifiedAt: BigInt(Date.now()),
 };
 
-export const ethCreatePayload: CreateFungibleTokenPayload = { ...eth };
+export const ethCreatePayload: CreatePayload = { ...eth };

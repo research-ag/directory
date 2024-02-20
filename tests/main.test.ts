@@ -43,7 +43,7 @@ describe("Directory", () => {
     let tokens, isArray;
 
     actor.setIdentity(userIdentity2);
-    tokens = await actor.getTokens();
+    tokens = await actor.allTokens();
     isArray = Array.isArray(tokens);
     expect(isArray && tokens.length === 0).toEqual(true);
 
@@ -53,7 +53,7 @@ describe("Directory", () => {
     await actor.addToken(ethCreatePayload);
 
     actor.setIdentity(userIdentity2);
-    tokens = await actor.getTokens();
+    tokens = await actor.allTokens();
     isArray = Array.isArray(tokens);
     expect(isArray && tokens.length === 3).toEqual(true);
   });
@@ -63,7 +63,7 @@ describe("Directory", () => {
     await actor.addToken(btcCreatePayload);
 
     actor.setIdentity(userIdentity2);
-    const [token] = await actor.getTokenByAssetId(btcCreatePayload.assetId);
+    const [token] = await actor.tokenByAssetId(btcCreatePayload.assetId);
     expect(token?.assetId === btcCreatePayload.assetId).toEqual(true);
   });
 
@@ -72,13 +72,13 @@ describe("Directory", () => {
     await actor.addToken(btcCreatePayload);
 
     actor.setIdentity(userIdentity2);
-    const [token] = await actor.getTokenBySymbol(btcCreatePayload.symbol);
+    const [token] = await actor.tokenBySymbol(btcCreatePayload.symbol);
     expect(token?.symbol === btcCreatePayload.symbol).toEqual(true);
   });
 
   test("should allow users to get freezing period", async () => {
     actor.setIdentity(userIdentity2);
-    const freezingPeriod = await actor.getFreezingPeriod();
+    const freezingPeriod = await actor.freezingPeriod();
     expect(!Number.isNaN(Number(freezingPeriod))).toEqual(true);
     expect(Number(freezingPeriod) === 86_400_000_000_000).toEqual(true);
   });
@@ -116,30 +116,30 @@ describe("Directory", () => {
   test("should allow owners to correct symbol", async () => {
     actor.setIdentity(userIdentity1);
     await actor.addToken(btcCreatePayload);
-    let [token] = await actor.getTokenByAssetId(btcCreatePayload.assetId);
+    let [token] = await actor.tokenByAssetId(btcCreatePayload.assetId);
     const newSymbol = "XXX";
     expect(token?.symbol !== newSymbol).toEqual(true);
     await actor.correctSymbol(btcCreatePayload.assetId, newSymbol);
-    [token] = await actor.getTokenByAssetId(btcCreatePayload.assetId);
+    [token] = await actor.tokenByAssetId(btcCreatePayload.assetId);
     expect(token?.symbol === newSymbol).toEqual(true);
   });
 
   test("should allow owners to correct asset id", async () => {
     actor.setIdentity(userIdentity1);
     await actor.addToken(btcCreatePayload);
-    let [token] = await actor.getTokenByAssetId(btcCreatePayload.assetId);
+    let [token] = await actor.tokenByAssetId(btcCreatePayload.assetId);
     const newAssetId = 100n;
     expect(token?.assetId !== newAssetId).toEqual(true);
     await actor.correctAssetId(btcCreatePayload.symbol, newAssetId);
-    [token] = await actor.getTokenBySymbol(btcCreatePayload.symbol);
+    [token] = await actor.tokenBySymbol(btcCreatePayload.symbol);
     expect(token?.assetId === newAssetId).toEqual(true);
   });
 
   test("should prevent token correction after freezing period", async () => {
     actor.setIdentity(userIdentity1);
-    const freezingPeriod = Number(await actor.getFreezingPeriod()) / 1_000_000; // in milliseconds
+    const freezingPeriod = Number(await actor.freezingPeriod()) / 1_000_000; // in milliseconds
     await actor.addToken(btcCreatePayload);
-    const [token] = await actor.getTokenByAssetId(btcCreatePayload.assetId);
+    const [token] = await actor.tokenByAssetId(btcCreatePayload.assetId);
     const createdTime = Number(token!.createdAt) / 1_000_000;
     let newAssetId = 10n;
     await actor.correctAssetId(btcCreatePayload.symbol, newAssetId++);
@@ -152,9 +152,9 @@ describe("Directory", () => {
 
   test("should allow owners to update token non-id info at any time", async () => {
     actor.setIdentity(userIdentity1);
-    const freezingPeriod = Number(await actor.getFreezingPeriod()) / 1_000_000; // in milliseconds
+    const freezingPeriod = Number(await actor.freezingPeriod()) / 1_000_000; // in milliseconds
     await actor.addToken(btcCreatePayload);
-    let [token] = await actor.getTokenByAssetId(btcCreatePayload.assetId);
+    let [token] = await actor.tokenByAssetId(btcCreatePayload.assetId);
     const createdTime = Number(token!.createdAt) / 1_000_000;
     await pic.setTime(createdTime + freezingPeriod);
     const newLogo = ethereumLogoBase64;
@@ -168,7 +168,7 @@ describe("Directory", () => {
       name: [newName],
       symbol: [newSymbol],
     });
-    [token] = await actor.getTokenByAssetId(btcCreatePayload.assetId);
+    [token] = await actor.tokenByAssetId(btcCreatePayload.assetId);
     expect(token?.logo === newLogo).toEqual(true);
     expect(token?.name === newName).toEqual(true);
     expect(token?.symbol === newSymbol).toEqual(true);
@@ -224,7 +224,7 @@ describe("Directory", () => {
   test("should not allow owners to add existing token", async () => {
     actor.setIdentity(userIdentity1);
     await actor.addToken(btcCreatePayload);
-    const [token] = await actor.getTokenByAssetId(btcCreatePayload.assetId);
+    const [token] = await actor.tokenByAssetId(btcCreatePayload.assetId);
     let promise = actor.addToken({
       ...btcCreatePayload,
       assetId: token!.assetId,
@@ -242,7 +242,7 @@ describe("Directory", () => {
   test("should not allow owners to correct token with invalid input", async () => {
     actor.setIdentity(userIdentity1);
     await actor.addToken(btcCreatePayload);
-    const [token] = await actor.getTokenByAssetId(btcCreatePayload.assetId);
+    const [token] = await actor.tokenByAssetId(btcCreatePayload.assetId);
     let promise = actor.correctSymbol(token!.assetId, "x".repeat(100));
     expect(promise).rejects.toThrow();
   });
@@ -265,9 +265,9 @@ describe("Directory", () => {
 
   test("should allow owners to update symbol capitalization after freezing period", async () => {
     actor.setIdentity(userIdentity1);
-    const freezingPeriod = Number(await actor.getFreezingPeriod()) / 1_000_000; // in milliseconds
+    const freezingPeriod = Number(await actor.freezingPeriod()) / 1_000_000; // in milliseconds
     await actor.addToken(btcCreatePayload);
-    let [token] = await actor.getTokenByAssetId(btcCreatePayload.assetId);
+    let [token] = await actor.tokenByAssetId(btcCreatePayload.assetId);
     const createdTime = Number(token!.createdAt) / 1_000_000;
     await pic.setTime(createdTime + freezingPeriod);
     const newSymbol = inverseCapitalization(token!.symbol);
@@ -276,7 +276,7 @@ describe("Directory", () => {
       name: [],
       symbol: [newSymbol],
     });
-    [token] = await actor.getTokenByAssetId(btcCreatePayload.assetId);
+    [token] = await actor.tokenByAssetId(btcCreatePayload.assetId);
     expect(token?.symbol === newSymbol).toEqual(true);
   });
 
