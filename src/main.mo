@@ -1,259 +1,214 @@
-import Vector "mo:vector/Class";
-import RBTree "mo:base/RBTree";
-import Principal "mo:base/Principal";
+import Error "mo:base/Error";
+import Iter "mo:base/Iter";
 import Nat "mo:base/Nat";
+import Option "mo:base/Option";
+import Principal "mo:base/Principal";
+import RBTree "mo:base/RBTree";
+import Result "mo:base/Result";
 import Text "mo:base/Text";
 import Time "mo:base/Time";
-import Option "mo:base/Option";
-import Error "mo:base/Error";
-import Result "mo:base/Result";
+import Vector "mo:vector/Class";
 
-import Types "./types"
+import Base64 "./base64";
+import Types "./types";
 
 actor class Directory(initialOwner : ?Principal) {
-  private let ownersMap = RBTree.RBTree<Principal, ()>(Principal.compare);
-  private stable var stableOwnersMap = ownersMap.share();
-
-  ignore do ? {
-    ownersMap.put(initialOwner!, ());
-  };
-
   type TokenIdx = Nat;
 
-  private let assetIdMap = RBTree.RBTree<Nat, TokenIdx>(Nat.compare);
-  private stable var stableAssetIdMap = assetIdMap.share();
+  let ownersMap = RBTree.RBTree<Principal, ()>(Principal.compare);
+  let assetIdMap = RBTree.RBTree<Nat, TokenIdx>(Nat.compare);
+  let keyMap = RBTree.RBTree<Text, TokenIdx>(Text.compare);
+  let tokens = Vector.Vector<Types.FungibleToken>();
 
-  private let keyMap = RBTree.RBTree<Text, TokenIdx>(Text.compare);
-  private stable var stableKeyMap = keyMap.share();
+  stable var stableOwnersMap = ownersMap.share();
+  stable var stableAssetIdMap = assetIdMap.share();
+  stable var stableKeyMap = keyMap.share();
+  stable var stableTokens = tokens.share();
 
-  private let tokens = Vector.Vector<Types.FungibleToken>();
-  private stable var stableTokens = tokens.share();
+  ignore do ? { ownersMap.put(initialOwner!, ()) };
 
-  private let freezingPeriod = 86_400_000_000_000;
+  let freezingPeriod_ = 86_400_000_000_000; // 1 day
 
-  public query func getFreezingPeriod() : async Nat { freezingPeriod };
-
-  public query func getTokens() : async [Types.FungibleToken] {
-    return Vector.toArray(tokens);
+  public query func owners() : async [Principal] {
+    ownersMap.entries()
+    |> Iter.map<(Principal, ()), Principal>(_, func(x) = x.0)
+    |> Iter.toArray<Principal>(_);
   };
 
-  public query func getTokenByAssetId(assetId : Nat) : async ?Types.FungibleToken {
-    return Option.map(assetIdMap.get(assetId), tokens.get);
+  public query func freezingPeriod() : async Nat {
+    freezingPeriod_;
   };
 
-  public query func getTokenBySymbol(symbol : Text) : async ?Types.FungibleToken {
-    return Option.map(keyMap.get(Text.toUppercase(symbol)), tokens.get);
+  public query func nTokens() : async Nat {
+    tokens.size();
+  };
+
+  public query func allTokens() : async [Types.FungibleToken] {
+    Vector.toArray(tokens);
+  };
+
+  public query func tokenByAssetId(assetId : Nat) : async ?Types.FungibleToken {
+    Option.map(assetIdMap.get(assetId), tokens.get);
+  };
+
+  public query func tokenBySymbol(symbol : Text) : async ?Types.FungibleToken {
+    Option.map(keyMap.get(Text.toUppercase(symbol)), tokens.get);
   };
 
   public shared ({ caller }) func addOwner(principal : Principal) : async () {
-    await* assertOwnerAccess(caller);
+    await* assertion.ownerAccess(caller);
     ownersMap.put(principal, ());
   };
 
   public shared ({ caller }) func removeOwner(principal : Principal) : async () {
-    await* assertOwnerAccess(caller);
+    await* assertion.ownerAccess(caller);
     ownersMap.delete(principal);
   };
 
-  public shared ({ caller }) func addToken(args : Types.CreateFungibleTokenPayload) : async () {
+  public shared ({ caller }) func addToken(args : Types.CreatePayload) : async () {
     let { assetId; symbol; name; logo } = args;
     let key = Text.toUppercase(symbol);
 
-    await* assertOwnerAccess(caller);
-    await* assertSymbolLength(symbol);
-    await* assertNameLength(name);
-    await* assertValidBase64Image(logo);
-    await* assertTokenNew(assetId, key);
+    await* assertion.ownerAccess(caller);
+    await* assertion.validSymbol(symbol);
+    await* assertion.validName(name);
+    await* assertion.validImage(logo);
+    await* assertion.tokenNew(assetId, key);
 
-    let currentTime = Time.now();
+    let newIndex = tokens.size();
+    assetIdMap.put(assetId, newIndex);
+    keyMap.put(key, newIndex);
 
-    let token : Types.FungibleToken = {
+    {
       args with
-      createdAt = currentTime;
-      modifiedAt = currentTime;
-    };
-
-    let tokensSize = tokens.size();
-    assetIdMap.put(assetId, tokensSize);
-    keyMap.put(key, tokensSize);
-    tokens.add(token);
+      createdAt = Time.now();
+      modifiedAt = Time.now();
+    }
+    |> tokens.add(_);
   };
 
   /// Update symbol by asset id
   public shared ({ caller }) func correctSymbol(assetId : Nat, newSymbol : Text) : async () {
-    await* assertOwnerAccess(caller);
+    await* assertion.ownerAccess(caller);
+    await* assertion.validSymbol(newSymbol);
 
-    let ?tokenIndex = assetIdMap.get(assetId) else throw Error.reject("Asset id does not exist");
-
-    await* assertSymbolLength(newSymbol);
-
-    let token = tokens.get(tokenIndex);
-
-    await* assertTimeNotExpired(token);
-
+    let ?index = assetIdMap.get(assetId) else throw Error.reject("Asset id does not exist");
+    let token = tokens.get(index);
     let prevKey = Text.toUppercase(token.symbol);
     let newKey = Text.toUppercase(newSymbol);
+
+    await* assertion.timeNotExpired(token);
 
     if (newSymbol == token.symbol) throw Error.reject("New token symbol is the same as the current one");
 
     if (prevKey != newKey) {
       if (keyMap.get(newKey) != null) throw Error.reject("New token symbol already exists");
       keyMap.delete(prevKey);
-      keyMap.put(newKey, tokenIndex);
+      keyMap.put(newKey, index);
     };
 
-    let updatedToken : Types.FungibleToken = {
+    {
       token with
       symbol = newSymbol;
       modifiedAt = Time.now();
-    };
-
-    tokens.put(tokenIndex, updatedToken);
+    }
+    |> tokens.put(index, _);
   };
 
   /// Update asset id by symbol
   public shared ({ caller }) func correctAssetId(symbol : Text, newAssetId : Nat) : async () {
-    await* assertOwnerAccess(caller);
+    await* assertion.ownerAccess(caller);
 
     let key = Text.toUppercase(symbol);
+    let ?index = keyMap.get(key) else throw Error.reject("Symbol does not exist");
+    let token = tokens.get(index);
 
-    let ?tokenIndex = keyMap.get(key) else throw Error.reject("Symbol does not exist");
-
-    let token = tokens.get(tokenIndex);
-
-    await* assertTimeNotExpired(token);
+    await* assertion.timeNotExpired(token);
 
     if (newAssetId == token.assetId) throw Error.reject("New asset id is the same as the current one");
-
     if (assetIdMap.get(newAssetId) != null) throw Error.reject("New asset id already exists");
 
     assetIdMap.delete(token.assetId);
-    assetIdMap.put(newAssetId, tokenIndex);
+    assetIdMap.put(newAssetId, index);
 
-    let updatedToken : Types.FungibleToken = {
+    {
       token with
       assetId = newAssetId;
       modifiedAt = Time.now();
-    };
-
-    tokens.put(tokenIndex, updatedToken);
+    }
+    |> tokens.put(index, _);
   };
 
   /// Update token info by asset id
-  public shared ({ caller }) func updateToken(assetId : Nat, updatePayload : Types.UpdateFungibleTokenPayload) : async () {
-    await* assertOwnerAccess(caller);
+  public shared ({ caller }) func updateToken(assetId : Nat, update : Types.UpdatePayload) : async () {
+    await* assertion.ownerAccess(caller);
 
     // existing token
-    let ?tokenIndex = assetIdMap.get(assetId) else throw Error.reject("Asset id does not exist");
-    let token = tokens.get(tokenIndex);
+    let ?index = assetIdMap.get(assetId) else throw Error.reject("Asset id does not exist");
+    let token = tokens.get(index);
 
     // check update payload
-    ignore do ? { await* assertSymbolLength(updatePayload.symbol!) };
-    ignore do ? { await* assertNameLength(updatePayload.name!) };
-    ignore do ? { await* assertValidBase64Image(updatePayload.logo!) };
-
-    switch (updatePayload.symbol) {
-      case (?newSymbol) {
-        if (Text.toUppercase(newSymbol) != Text.toUppercase(token.symbol)) {
-          return throw Error.reject("Only symbol capitalization can be updated");
-        };
+    ignore do ? {
+      await* assertion.validSymbol(update.symbol!);
+      await* assertion.validName(update.name!);
+      await* assertion.validImage(update.logo!);
+      if (Text.toUppercase(update.symbol!) != Text.toUppercase(token.symbol)) {
+        throw Error.reject("Only symbol capitalization can be updated");
       };
-      case null {};
     };
 
-    let updatedToken : Types.FungibleToken = {
+    {
       token with
-      symbol = Option.get(updatePayload.symbol, token.symbol);
-      name = Option.get(updatePayload.name, token.name);
-      logo = Option.get(updatePayload.logo, token.logo);
-      createdAt = token.createdAt;
+      symbol = Option.get(update.symbol, token.symbol);
+      name = Option.get(update.name, token.name);
+      logo = Option.get(update.logo, token.logo);
       modifiedAt = Time.now();
-    };
+    }
+    |> tokens.put(index, _);
 
-    tokens.put(tokenIndex, updatedToken);
   };
 
-  private func assertOwnerAccess(principal : Principal) : async* () {
-    if (ownersMap.get(principal) == null) {
-      throw Error.reject("No Access for this principal " # Principal.toText(principal));
-    };
-  };
+  let assertion = module {
+    // All functions in this module are async* so that they can throw
 
-  private func assertTokenNew(assetId : Nat, key : Text) : async* () {
-    if (assetIdMap.get(assetId) != null) throw Error.reject("Asset id already exists");
-    if (keyMap.get(key) != null) throw Error.reject("Token symbol already exists");
-  };
-
-  private func assertTimeNotExpired(token : Types.FungibleToken) : async* () {
-    if ((Time.now() - token.createdAt) >= freezingPeriod) {
-      throw Error.reject("Time to correct token has expired");
-    };
-  };
-
-  private func assertSymbolLength(symbol : Text) : async* () {
-    if (symbol.size() >= 8) {
-      throw Error.reject("Token symbol cannot be longer than 8 characters");
-    };
-  };
-
-  private func assertNameLength(name : Text) : async* () {
-    if (name.size() >= 64) {
-      throw Error.reject("Token name cannot be longer than 64 characters");
-    };
-  };
-
-  private func assertValidBase64Image(base64String : Text) : async* () {
-    switch (validateBase64Image(base64String)) {
-      case (#ok()) {};
-      case (#err(msg)) { throw Error.reject(msg) };
-    };
-  };
-
-  private func validateBase64Image(base64String : Text) : Result.Result<(), Text> {
-    let pngPrefix = "data:image/png;base64,";
-    let svgPrefix = "data:image/svg+xml;base64,";
-    let jpegPrefix = "data:image/jpeg;base64,";
-
-    let prefixes : [Text] = [pngPrefix, svgPrefix, jpegPrefix];
-
-    for (prefix in prefixes.vals()) {
-      if (Text.startsWith(base64String, #text(prefix))) {
-        let imageData = Text.stripStart(base64String, #text(prefix));
-
-        switch (imageData) {
-          case (null) {
-            return #err("Token logo image is corrupted");
-          };
-          case (?data) {
-            if (Text.size(data) > 0) {
-              let encodedSize = Text.size(data);
-              let decodedSize = (encodedSize * 3) / 4;
-
-              if (decodedSize > 32_000) {
-                return #err("Token logo image must be no larger than 32 kB");
-              };
-
-              if (Text.contains(data, #predicate(notBase64Char))) {
-                return #err("Token logo image is corrupted");
-              };
-
-              return #ok();
-            };
-          };
-        };
-
+    public func ownerAccess(principal : Principal) : async* () {
+      if (ownersMap.get(principal) == null) {
+        throw Error.reject("No Access for this principal " # Principal.toText(principal));
       };
     };
 
-    return #err("Token logo image must be passed in base64 format");
-  };
+    public func tokenNew(assetId : Nat, key : Text) : async* () {
+      if (assetIdMap.get(assetId) != null) throw Error.reject("Asset id already exists");
+      if (keyMap.get(key) != null) throw Error.reject("Token symbol already exists");
+    };
 
-  private func isBase64Char(char : Char) : Bool {
-    return (char >= 'A' and char <= 'Z') or (char >= 'a' and char <= 'z') or (char >= '0' and char <= '9') or char == '+' or char == '/' or char == '=';
-  };
+    public func timeNotExpired(token : Types.FungibleToken) : async* () {
+      if (Time.now() - token.createdAt >= freezingPeriod_) {
+        throw Error.reject("Time to correct token has expired");
+      };
+    };
 
-  private func notBase64Char(char : Char) : Bool {
-    return not isBase64Char(char);
+    public func validSymbol(symbol : Text) : async* () {
+      if (symbol.size() > 8) {
+        throw Error.reject("Token symbol cannot be longer than 8 characters");
+      };
+      if (Text.contains(symbol, #predicate(func(c) { c > 'z' or (c < 'a' and c > 'Z') or (c < 'A' and c > '9') or (c < '0') }))) {
+        throw Error.reject("Token symbol can only contain letters and digits");
+      };
+    };
+
+    public func validName(name : Text) : async* () {
+      if (name.size() > 64) {
+        throw Error.reject("Token name cannot be longer than 64 characters");
+      };
+    };
+
+    public func validImage(image : Text) : async* () {
+      switch (Base64.validateImage(image)) {
+        case (#err msg) throw Error.reject(msg);
+        case (_) {};
+      };
+    };
   };
 
   system func preupgrade() {
@@ -269,4 +224,5 @@ actor class Directory(initialOwner : ?Principal) {
     keyMap.unshare(stableKeyMap);
     tokens.unshare(stableTokens);
   };
+
 };
