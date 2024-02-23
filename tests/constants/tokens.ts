@@ -1,7 +1,8 @@
 import {
   FungibleToken,
   CreatePayload,
-} from "../../declarations/directory.did";
+} from "@declarations/directory/directory.did";
+
 import { bitcoinlogoBase64 } from "./base64Images";
 
 export const btc: FungibleToken = {
