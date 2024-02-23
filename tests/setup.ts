@@ -1,9 +1,10 @@
 import { IDL } from "@dfinity/candid";
-import { idlFactory, init } from "../declarations/directory.did";
-import type { _SERVICE } from "../declarations/directory.did";
 import { resolve } from "node:path";
 import { PocketIc } from "@hadronous/pic";
 import { Principal } from "@dfinity/principal";
+
+import { idlFactory, init } from "@declarations/directory/directory.did";
+import type { _SERVICE } from "@declarations/directory/directory.did";
 
 interface InitArgs {
   initialOwner?: Principal;

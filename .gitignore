@@ -7,3 +7,6 @@
 .mops
 node_modules
 declarations
+dist
+.env
+deps
