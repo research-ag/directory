@@ -7,7 +7,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "setup": "dfx canister create --all && dfx build && dfx generate",
+    "setup": "dfx canister create --all && dfx build && dfx generate && dfx deploy",
     "dev:frontend": "vite --port 3993 --host",
     "dev:directory": "mo-dev --generate --deploy -y",
     "build:frontend": "tsc && vite build",
