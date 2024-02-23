@@ -7,7 +7,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "setup": "dfx canister create --all && dfx build && dfx generate && dfx deploy",
+    "setup": "dfx canister create --all && dfx build internet_identity && dfx generate && dfx deploy",
     "dev:frontend": "vite --port 3993 --host",
     "dev:directory": "mo-dev --generate --deploy -y",
     "build:frontend": "tsc && vite build",
@@ -15,10 +15,10 @@
     "test": "jest -c ./jest.config.ts"
   },
   "devDependencies": {
-    "@dfinity/agent": "^0.19.3",
-    "@dfinity/candid": "^0.19.3",
-    "@dfinity/identity": "^0.19.3",
-    "@dfinity/principal": "^0.19.3",
+    "@dfinity/agent": "^1.0.0",
+    "@dfinity/candid": "^1.0.0",
+    "@dfinity/identity": "^1.0.0",
+    "@dfinity/principal": "^1.0.0",
     "@hadronous/pic": "^0.3.0",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.11.19",
