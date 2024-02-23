@@ -104,7 +104,7 @@ const TokensTable = ({
                               onClick={() => onCorrectSymbolId(token)}
                               disabled={!isCorrectable}
                             >
-                              Correct symbol id
+                              Correct symbol
                             </MenuItem>
                           </Box>
                         </Tooltip>

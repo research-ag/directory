@@ -11,7 +11,10 @@ export const useDirectoryBackend = () => {
   const { identity } = useIdentity();
 
   const directory = createActor(canisterId, {
-    agentOptions: { identity },
+    agentOptions: {
+      identity,
+      verifyQuerySignatures: false,
+    },
   });
 
   return { directory };
