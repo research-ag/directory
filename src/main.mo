@@ -148,10 +148,10 @@ actor class Directory(initialOwner : ?Principal) {
     let token = tokens.get(index);
 
     // check update payload
+    ignore do ? { await* assertion.validSymbol(update.symbol!) };
+    ignore do ? { await* assertion.validName(update.name!) };
+    ignore do ? { await* assertion.validImage(update.logo!) };
     ignore do ? {
-      await* assertion.validSymbol(update.symbol!);
-      await* assertion.validName(update.name!);
-      await* assertion.validImage(update.logo!);
       if (Text.toUppercase(update.symbol!) != Text.toUppercase(token.symbol)) {
         throw Error.reject("Only symbol capitalization can be updated");
       };

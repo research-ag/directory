@@ -1,5 +1,22 @@
 # Directory
 
+A token directory for the HPL. 
+The canister provides the metadata for the assets in the HPL 
+that the ledger canister itself does not store.
+These are:
+
+* token symbol
+* token name
+* token logo
+
+The ledger canister itself stores:
+
+* decimals
+* self-description
+
+However, generally, the self-description can not be trusted.
+The directory provides metadata which is curated by the directory's admins.
+
 ## Local setup
 
 It is assumed that you have:
@@ -31,3 +48,13 @@ yarn build:directory
 ```
 yarn test
 ```
+
+## Copyright
+
+MR Research AG, 2023
+## Authors
+
+Denys Kushnarov (reginleif888) with contributions from Timo Hanke (timohanke) and Oliver Garcia (OliverSDS).
+## License
+
+Apache-2.0
