@@ -33,6 +33,6 @@ module {
   };
 
   func isNotBase64(c : Char) : Bool {
-    c > 'z' or (c < 'a' and c > 'Z') or (c < 'A' and c > '9') or (c < '/' and c != '+');
+    c > 'z' or (c < 'a' and c > 'Z') or (c < 'A' and c != '=' and c > '9') or (c < '/' and c != '+');
   };
 };

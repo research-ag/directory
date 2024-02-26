@@ -1,6 +1,7 @@
 import { Actor, PocketIc, createIdentity } from "@hadronous/pic";
 
-import { _SERVICE } from "../declarations/directory.did";
+import { _SERVICE } from "@declarations/directory/directory.did";
+
 import {
   btcCreatePayload,
   icpCreatePayload,

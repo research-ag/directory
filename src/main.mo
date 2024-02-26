@@ -20,12 +20,12 @@ actor class Directory(initialOwner : ?Principal) {
   let keyMap = RBTree.RBTree<Text, TokenIdx>(Text.compare);
   let tokens = Vector.Vector<Types.FungibleToken>();
 
+  ignore do ? { ownersMap.put(initialOwner!, ()) };
+
   stable var stableOwnersMap = ownersMap.share();
   stable var stableAssetIdMap = assetIdMap.share();
   stable var stableKeyMap = keyMap.share();
   stable var stableTokens = tokens.share();
-
-  ignore do ? { ownersMap.put(initialOwner!, ()) };
 
   let freezingPeriod_ = 86_400_000_000_000; // 1 day
 

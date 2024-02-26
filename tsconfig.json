@@ -1,24 +1,28 @@
 {
   "compilerOptions": {
-    // compilation
-    "module": "NodeNext",
     "target": "ESNext",
-    "lib": ["ESNext"],
-
-    // resolution
-    "moduleResolution": "NodeNext",
-    "moduleDetection": "force",
-
-    // type checking
-    "strict": true,
+    "useDefineForClassFields": true,
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "allowJs": false,
-    "downlevelIteration": true,
     "skipLibCheck": true,
+    "esModuleInterop": false,
     "allowSyntheticDefaultImports": true,
+    "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "noImplicitAny": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
-  }
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "types": ["vite/client", "node"],
+    "baseUrl": "./",
+    "paths": {
+      "@declarations": ["./declarations"],
+      "@declarations/*": ["./declarations/*"],
+      "@fe": ["./frontend"],
+      "@fe/*": ["./frontend/*"]
+    }
+  },
+  "include": ["frontend"]
 }

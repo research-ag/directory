@@ -1,4 +1,6 @@
-import type { JestConfigWithTsJest } from "ts-jest";
+import { type JestConfigWithTsJest, pathsToModuleNameMapper } from "ts-jest";
+
+import { compilerOptions } from "./tsconfig.json";
 
 const config: JestConfigWithTsJest = {
   watch: false,
@@ -14,6 +16,9 @@ const config: JestConfigWithTsJest = {
       },
     ],
   },
+  moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths, {
+    prefix: "<rootDir>",
+  }),
 };
 
 export default config;

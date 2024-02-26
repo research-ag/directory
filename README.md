@@ -20,30 +20,29 @@ The directory provides metadata which is curated by the directory's admins.
 ## Local setup
 
 It is assumed that you have:
-* Dfnity SDK installed
-* NodeJS installed
-* yarn installed
+- Dfinity SDK installed
+- NodeJS installed
+- yarn installed
 
 Once you have cloned the repository, follow this process in your terminal:
-
 1. In your project directory, run this command to install yarn dependencies:
 ```
 yarn install
 ```
 2. Start local Internet Computer replica:
 ```
-dfx start --background
+dfx start --clean --background
 ```
-3. Deploy your canisters locally
+3. Setup and deploy canisters locally
 ```
-dfx deploy
+yarn setup
 ```
 
 ## Running tests
 
 1. Generate the canister declarations and build the canister:
 ```
-yarn build
+yarn build:directory
 ```
 2. Run the canister tests:
 ```
