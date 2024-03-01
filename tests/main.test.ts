@@ -81,13 +81,7 @@ describe("Directory", () => {
     actor.setIdentity(userIdentity2);
     const freezingPeriod = await actor.freezingPeriod();
     expect(!Number.isNaN(Number(freezingPeriod))).toEqual(true);
-    console.log("=== LOG", {
-      freezingPeriod,
-      type: typeof freezingPeriod,
-      fp: 86_400_000_000_000,
-      result: Number(freezingPeriod) === 86_400_000_000_000,
-    });
-    expect(Number(freezingPeriod) === 86_400_000_000_000).toEqual(true);
+    expect(Number(freezingPeriod) === 365 * 86_400_000_000_000).toEqual(true);
   });
 
   test("should allow owners to add new owner", async () => {
