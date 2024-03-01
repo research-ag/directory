@@ -23,12 +23,12 @@ jobs:
         run: dfx --version
 
       - name: Set up Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
 
       - name: Restore dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         id: yarn-cache
         with:
           path: node_modules
@@ -53,7 +53,7 @@ jobs:
         run: dfx stop
 
       - name: Cache dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         if: steps.yarn-cache.outputs.cache-hit != 'true'
         with:
           path: node_modules
