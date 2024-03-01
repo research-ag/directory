@@ -43,16 +43,22 @@ jobs:
         run: DFX_VERSION=${{ env.dfx_version }} DFXVM_INIT_YES=true sh -ci "$(curl -fsSL https://internetcomputer.org/install.sh)"
 
       - name: Start local dfx
-        run: dfx start --clean --background
+        run: |
+          source "$HOME/.local/share/dfx/env"
+          dfx start --clean --background
 
       - name: Build canisters
-        run: dfx canister create --all && dfx build internet_identity && dfx generate && dfx build --check
+        run: |
+          source "$HOME/.local/share/dfx/env"
+          dfx canister create --all && dfx build internet_identity && dfx generate && dfx build --check
 
       - name: Run integration tests
         run: yarn test
 
       - name: Stop local dfx
-        run: dfx stop
+        run: |
+          source "$HOME/.local/share/dfx/env"
+          dfx stop
 
       - name: Cache dependencies
         uses: actions/cache@v2
