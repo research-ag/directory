@@ -8,11 +8,13 @@ import Result "mo:base/Result";
 import Text "mo:base/Text";
 import Time "mo:base/Time";
 import Vector "mo:vector/Class";
+import PT "mo:promtracker";
 
 import Base64 "./base64";
+import Http "./tiny_http";
 import Types "./types";
 
-actor class Directory(initialOwner : ?Principal) {
+actor class Directory(initialOwner : ?Principal) = self {
   type TokenIdx = Nat;
 
   let ownersMap = RBTree.RBTree<Principal, ()>(Principal.compare);
@@ -22,10 +24,15 @@ actor class Directory(initialOwner : ?Principal) {
 
   ignore do ? { ownersMap.put(initialOwner!, ()) };
 
+  let metrics = PT.PromTracker("", 65);
+  metrics.addSystemValues();
+  ignore metrics.addPullValue("number_of_registered_tokens", "", tokens.size);
+
   stable var stableOwnersMap = ownersMap.share();
   stable var stableAssetIdMap = assetIdMap.share();
   stable var stableKeyMap = keyMap.share();
   stable var stableTokens = tokens.share();
+  stable var stableMetrics = metrics.share();
 
   let freezingPeriod_ = 86_400_000_000_000; // 1 day
 
@@ -216,6 +223,7 @@ actor class Directory(initialOwner : ?Principal) {
     stableAssetIdMap := assetIdMap.share();
     stableKeyMap := keyMap.share();
     stableTokens := tokens.share();
+    stableMetrics := metrics.share();
   };
 
   system func postupgrade() {
@@ -223,6 +231,15 @@ actor class Directory(initialOwner : ?Principal) {
     assetIdMap.unshare(stableAssetIdMap);
     keyMap.unshare(stableKeyMap);
     tokens.unshare(stableTokens);
+    metrics.unshare(stableMetrics);
   };
 
+  public query func http_request(req : Http.Request) : async Http.Response {
+    let ?path = Text.split(req.url, #char '?').next() else return Http.render400();
+    let labels = "canister=\"" # PT.shortName(self) # "\"";
+    switch (req.method, path) {
+      case ("GET", "/metrics") Http.renderPlainText(metrics.renderExposition(labels));
+      case (_) Http.render400();
+    };
+  };
 };
