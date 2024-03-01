@@ -1,0 +1,62 @@
+name: Development CI
+env:
+  mops_version: latest
+  dfx_version: 0.17.0
+on:
+  pull_request:
+    branches:
+      - main
+jobs:
+  CI:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Restore dependencies
+        uses: actions/cache@v2
+        id: yarn-cache
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Install npm dependencies
+        if: steps.yarn-cache.outputs.cache-hit != 'true'
+        run: yarn
+
+      - name: Install mops
+        run: npm i -g ic-mops@${{ env.mops_version }}
+
+      - name: Install dfx
+        run: DFX_VERSION=${{ env.dfx_version }} DFXVM_INIT_YES=true sh -ci "$(curl -fsSL https://internetcomputer.org/install.sh)"
+
+      - name: Start local dfx
+        run: dfx start --clean --background
+
+      - name: Build canisters
+        run: dfx canister create --all && dfx build internet_identity && dfx generate && dfx build --check
+
+      - name: Run integration tests
+        run: yarn test
+
+      - name: Stop local dfx
+        run: dfx stop
+
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        if: steps.yarn-cache.outputs.cache-hit != 'true'
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
