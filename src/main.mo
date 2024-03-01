@@ -15,6 +15,12 @@ import Http "./tiny_http";
 import Types "./types";
 
 actor class Directory(initialOwner : ?Principal) = self {
+  let ledgerPrincipal : Text = "rqx66-eyaaa-aaaap-aaona-cai";
+
+  let ledgerActor : actor {
+    nFtAssets : shared query () -> async Nat;
+  } = actor (ledgerPrincipal);
+
   type TokenIdx = Nat;
 
   let ownersMap = RBTree.RBTree<Principal, ()>(Principal.compare);
@@ -81,6 +87,7 @@ actor class Directory(initialOwner : ?Principal) = self {
     await* assertion.validName(name);
     await* assertion.validImage(logo);
     await* assertion.tokenNew(assetId, key);
+    await* assertion.assetIdExistsInLedger(assetId);
 
     let newIndex = tokens.size();
     assetIdMap.put(assetId, newIndex);
@@ -134,6 +141,8 @@ actor class Directory(initialOwner : ?Principal) = self {
 
     if (newAssetId == token.assetId) throw Error.reject("New asset id is the same as the current one");
     if (assetIdMap.get(newAssetId) != null) throw Error.reject("New asset id already exists");
+
+    await* assertion.assetIdExistsInLedger(newAssetId);
 
     assetIdMap.delete(token.assetId);
     assetIdMap.put(newAssetId, index);
@@ -192,6 +201,13 @@ actor class Directory(initialOwner : ?Principal) = self {
     public func timeNotExpired(token : Types.FungibleToken) : async* () {
       if (Time.now() - token.createdAt >= freezingPeriod_) {
         throw Error.reject("Time to correct token has expired");
+      };
+    };
+
+    public func assetIdExistsInLedger(assetId : Nat) : async* () {
+      let nLedgerAssets = await ledgerActor.nFtAssets();
+      if (assetId > nLedgerAssets) {
+        throw Error.reject("Asset id does not exist in the ledger");
       };
     };
 
