@@ -15,8 +15,12 @@ jobs:
         node-version: [18.x]
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+      - uses: ZenVoich/setup-mops@v1
+      - uses: dfinity/setup-dfx@main
+
+      - name: Confirm dfx installation
+        run: dfx --version
 
       - name: Set up Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
@@ -36,29 +40,17 @@ jobs:
         if: steps.yarn-cache.outputs.cache-hit != 'true'
         run: yarn
 
-      - name: Install mops
-        run: npm i -g ic-mops@${{ env.mops_version }}
-
-      - name: Install dfx
-        run: DFX_VERSION=${{ env.dfx_version }} DFXVM_INIT_YES=true sh -ci "$(curl -fsSL https://internetcomputer.org/install.sh)"
-
       - name: Start local dfx
-        run: |
-          source "$HOME/.local/share/dfx/env"
-          dfx start --clean --background
+        run: dfx start --clean --background
 
       - name: Build canisters
-        run: |
-          source "$HOME/.local/share/dfx/env"
-          dfx canister create --all && dfx build internet_identity && dfx generate && dfx build --check
+        run: dfx canister create --all && dfx build internet_identity && dfx generate && dfx build --check
 
       - name: Run integration tests
         run: yarn test
 
       - name: Stop local dfx
-        run: |
-          source "$HOME/.local/share/dfx/env"
-          dfx stop
+        run: dfx stop
 
       - name: Cache dependencies
         uses: actions/cache@v2
