@@ -17,7 +17,7 @@ const queryClient = new QueryClient({
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <CssVarsProvider>
+      <CssVarsProvider defaultMode="light">
         <CssBaseline />
         <SnackbarProvider
           anchorOrigin={{ vertical: "bottom", horizontal: "right" }}

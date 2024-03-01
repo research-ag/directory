@@ -4,6 +4,7 @@ import { Box, Tabs, TabList, Tab, Typography } from "@mui/joy";
 import Tokens from "@fe/components/tokens";
 import Owners from "@fe/components/owners";
 import ConnectButton from "@fe/components/connect-button";
+import ThemeButton from "@fe/components/theme-button";
 import { useIdentity } from "@fe/integration/identity";
 
 const Root = () => {
@@ -42,6 +43,7 @@ const Root = () => {
             <Tab color="neutral">Owners</Tab>
           </TabList>
           <ConnectButton />
+          <ThemeButton sx={{ marginLeft: 1 }} />
         </Box>
         {tabValue === 0 && <Tokens />}
         {tabValue === 1 && <Owners />}
