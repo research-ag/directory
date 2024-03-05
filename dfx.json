@@ -27,10 +27,6 @@
         "id": {
           "ic": "rdmx6-jaaaa-aaaaa-aaadq-cai"
         }
-      },
-      "declarations": {
-        "bindings": ["js", "ts"],
-        "output": "./declarations/internet_identity"
       }
     }
   },
