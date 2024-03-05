@@ -51,7 +51,7 @@ jobs:
 
       - name: Build all canisters
         run: |
-          dfx build --check
+          dfx build --check directory
 
       - name: Run integration tests
         run: yarn test
