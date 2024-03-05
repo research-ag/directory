@@ -23,7 +23,7 @@ jobs:
       - name: Confirm dfx version
         run: dfx --version
 
-      - name: Build directory canister
+      - name: Build backend canister
         run: dfx build --check directory
 
       # Check the backend canister's did file against the one from build
@@ -38,8 +38,7 @@ jobs:
           chmod +x /home/runner/bin/didc
           echo "/home/runner/bin" >> $GITHUB_PATH
 
-      - name: Check main hpl .did files
-        working-directory: ./did
+      - name: Check backend canister .did file
         run: didc check -s did/directory.did .dfx/local/canisters/directory/directory.did
 
       # Run the integration tests
