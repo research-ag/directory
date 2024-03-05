@@ -1,6 +1,5 @@
 name: CI
 env:
-  mops_version: latest
   dfx_version: 0.17.0
 on:
   pull_request:
@@ -16,15 +15,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: ZenVoich/setup-mops@v1
       - uses: dfinity/setup-dfx@main
 
       - name: Confirm dfx version
         run: dfx --version
 
       - name: Build directory canister
-        run: |
-          dfx build --check directory
+        run: dfx build --check directory
 
       - name: Set up Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
@@ -51,8 +48,7 @@ jobs:
 
       - name: Build frontend
         run: |
-          dfx build --check internet_identity
-          dfx generate
+          dfx build --check internet_identity && dfx generate
           dfx build --check frontend
 
       - name: Cache dependencies
