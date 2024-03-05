@@ -28,7 +28,7 @@
         }
       },
       "declarations": {
-        "bindings": ["js", "ts"],
+        "bindings": ["ts"],
         "output": "./declarations/internet_identity"
       }
     }
