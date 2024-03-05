@@ -49,10 +49,6 @@ jobs:
         if: steps.yarn-cache.outputs.cache-hit != 'true'
         run: yarn
 
-      - name: Build all canisters
-        run: |
-          dfx build --check directory
-
       - name: Run integration tests
         run: yarn test
 
