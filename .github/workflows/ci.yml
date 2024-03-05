@@ -40,16 +40,11 @@ jobs:
         if: steps.yarn-cache.outputs.cache-hit != 'true'
         run: yarn
 
-      #- name: Start local dfx
-      #  run: dfx start --clean --background
-
       - name: Build canisters
         run: |
+          dfx build --check internet_identity
           dfx generate
           dfx build --check
-
-      #- name: Stop local dfx
-      #  run: dfx stop
 
       - name: Run integration tests
         run: yarn test
