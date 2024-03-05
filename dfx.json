@@ -19,6 +19,7 @@
     },
     "internet_identity": {
       "type": "custom",
+      "main": "./declarations/internet_identity/internet_identity.did.ts",
       "candid": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity.did",
       "wasm": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity_dev.wasm.gz",
       "remote": {
@@ -28,7 +29,7 @@
         }
       },
       "declarations": {
-        "bindings": ["ts"],
+        "bindings": ["js", "ts"],
         "output": "./declarations/internet_identity"
       }
     }
