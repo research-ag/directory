@@ -13,7 +13,7 @@
     },
     "frontend": {
       "type": "assets",
-      "dependencies": ["directory", "internet_identity"],
+      "dependencies": ["directory"],
       "source": ["dist/"],
       "build": "npm run build:frontend"
     },
