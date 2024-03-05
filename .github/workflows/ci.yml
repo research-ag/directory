@@ -19,12 +19,30 @@ jobs:
       - uses: ZenVoich/setup-mops@v1
       - uses: dfinity/setup-dfx@main
 
+      # Check if the backend canister builds from dfx.json
       - name: Confirm dfx version
         run: dfx --version
 
       - name: Build directory canister
         run: dfx build --check directory
 
+      # Check the backend canister's did file against the one from build
+      # TODO: Can we make a github action to setup didc?
+      - name: Make bin directory
+        run: mkdir -p /home/runner/bin
+
+      - name: Get didc
+        run: |
+          release=$(curl --silent "https://api.github.com/repos/dfinity/candid/releases/latest" | awk -F\" '/tag_name/ { print $4 }')  	
+          curl -fsSL https://github.com/dfinity/candid/releases/download/$release/didc-linux64 > /home/runner/bin/didc
+          chmod +x /home/runner/bin/didc
+          echo "/home/runner/bin" >> $GITHUB_PATH
+
+      - name: Check main hpl .did files
+        working-directory: ./did
+        run: didc check -s did/directory.did .dfx/local/canisters/directory/directory.did
+
+      # Run the integration tests
       - name: Set up Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
@@ -48,6 +66,7 @@ jobs:
           dfx generate directory
           yarn test
 
+      # Check if the frontend builds
       - name: Build frontend
         run: |
           dfx build --check internet_identity && dfx generate
