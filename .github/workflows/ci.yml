@@ -22,6 +22,15 @@ jobs:
       - name: Confirm dfx installation
         run: dfx --version
 
+      - name: Build directory canister
+        run: |
+          dfx build --check directory
+
+      - name: Create internet_identity bindings
+        run: |
+          dfx build --check internet_identity
+          dfx generate
+
       - name: Set up Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
@@ -40,11 +49,9 @@ jobs:
         if: steps.yarn-cache.outputs.cache-hit != 'true'
         run: yarn
 
-      - name: Build canisters
+      - name: Build frontend canister
         run: |
-          dfx build --check internet_identity
-          dfx generate
-          dfx build --check
+          dfx build --check frontend
 
       - name: Run integration tests
         run: yarn test
