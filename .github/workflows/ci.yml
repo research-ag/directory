@@ -27,6 +27,7 @@ jobs:
         run: dfx build --check directory
 
       # Check the backend canister's did file against the one from build
+      # Requires didc to be installed
       # TODO: Can we make a github action to setup didc?
       - name: Make bin directory
         run: mkdir -p /home/runner/bin
@@ -41,7 +42,8 @@ jobs:
       - name: Check backend canister .did file
         run: didc check -s did/directory.did .dfx/local/canisters/directory/directory.did
 
-      # Run the integration tests
+      # Run the integration tests with PocketIC
+      # Requires node
       - name: Set up Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
@@ -68,7 +70,6 @@ jobs:
       # Check if the frontend builds
       - name: Build frontend
         run: |
-          dfx build --check internet_identity && dfx generate
           dfx build --check frontend
 
       - name: Cache dependencies
