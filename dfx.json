@@ -27,7 +27,6 @@
           "ic": "rdmx6-jaaaa-aaaaa-aaadq-cai"
         }
       },
-      "frontend": {},
       "declarations": {
         "bindings": ["js", "ts"],
         "output": "./declarations/internet_identity"
