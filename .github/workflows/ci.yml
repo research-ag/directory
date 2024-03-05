@@ -45,9 +45,8 @@ jobs:
 
       - name: Build canisters
         run: |
-          dfx build --check internet_identity
-          dfx generate
           dfx build --check
+          dfx generate
 
       #- name: Stop local dfx
       #  run: dfx stop
