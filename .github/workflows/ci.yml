@@ -45,8 +45,8 @@ jobs:
 
       - name: Build canisters
         run: |
-          dfx build --check
           dfx generate
+          dfx build --check
 
       #- name: Stop local dfx
       #  run: dfx stop
