@@ -61,6 +61,9 @@ actor class Directory(initialOwner : ?Principal) {
   };
 
   public shared ({ caller }) func removeOwner(principal : Principal) : async () {
+    if (Principal.equal(principal, caller)) {
+      throw Error.reject("Cannot remove yourself from owners");
+    };
     await* assertion.ownerAccess(caller);
     ownersMap.delete(principal);
   };
