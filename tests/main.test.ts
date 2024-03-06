@@ -109,6 +109,14 @@ describe("Directory", () => {
     expect(actor.addToken(ethCreatePayload)).rejects.toThrow();
   });
 
+  test("should not allow owners to remove themselves", async () => {
+    actor.setIdentity(userIdentity1);
+    await actor.addOwner(userIdentity1.getPrincipal());
+    await expect(actor.removeOwner(userIdentity1.getPrincipal()))
+      .rejects
+      .toThrow("Cannot remove yourself from owners");
+  });
+
   test("should allow owners to add new token", async () => {
     actor.setIdentity(userIdentity1);
     await actor.addToken(btcCreatePayload);

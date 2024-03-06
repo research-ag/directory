@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "repository": "https://github.com/research-ag/directory.git",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "type": "module",
   "scripts": {
     "setup": "dfx canister create --all && dfx build internet_identity && dfx generate && dfx deploy",
