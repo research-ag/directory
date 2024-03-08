@@ -39,6 +39,9 @@ actor class Directory(initialOwner : ?Principal) = self {
   stable var stableKeyMap = keyMap.share();
   stable var stableTokens = tokens.share();
   stable var stableMetrics = metrics.share();
+  stable var nLedgerAssets = 0;
+
+  ignore metrics.addPullValue("cached_number_of_ledger_assets", "", func() = nLedgerAssets);
 
   let freezingPeriod_ = 86_400_000_000_000; // 1 day
 
@@ -205,9 +208,11 @@ actor class Directory(initialOwner : ?Principal) = self {
     };
 
     public func assetIdExistsInLedger(assetId : Nat) : async* () {
-      let nLedgerAssets = await ledgerActor.nFtAssets();
       if (assetId > nLedgerAssets) {
-        throw Error.reject("Asset id does not exist in the ledger");
+        nLedgerAssets := await ledgerActor.nFtAssets();
+        if (assetId > nLedgerAssets) {
+          throw Error.reject("Asset id does not exist in the ledger");
+        };
       };
     };
 

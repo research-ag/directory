@@ -9,7 +9,7 @@
   "scripts": {
     "setup": "dfx canister create --all && dfx build internet_identity && dfx generate && dfx deploy",
     "dev:frontend": "vite --port 3993 --host",
-    "dev:directory": "mo-dev --generate --deploy -y",
+    "dev:directory": "mo-dev --generate --deploy -y directory",
     "build:frontend": "tsc && vite build",
     "build:directory": "dfx generate directory && dfx build directory --check",
     "test": "jest -c ./jest.config.ts"

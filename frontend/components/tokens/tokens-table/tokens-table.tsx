@@ -40,7 +40,7 @@ const TokensTable = ({
     <Box sx={{ width: "100%", overflow: "auto" }}>
       <Table>
         <colgroup>
-          {isOwner && <col style={{ width: "100px" }} />}
+          <col style={{ width: isOwner ? "100px" : "50px" }} />
           <col style={{ width: "80px" }} />
           <col style={{ width: "70px" }} />
           <col style={{ width: "70px" }} />
@@ -51,7 +51,7 @@ const TokensTable = ({
 
         <thead>
           <tr>
-            {isOwner && <th></th>}
+            <th></th>
             <th>Asset id</th>
             <th>Logo</th>
             <th>Symbol</th>
@@ -66,16 +66,16 @@ const TokensTable = ({
 
             return (
               <tr key={String(token.assetId)}>
-                {isOwner && (
-                  <td>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 2,
-                        marginRight: 1,
-                      }}
-                    >
+                <td>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 2,
+                      marginRight: 1,
+                    }}
+                  >
+                    {isOwner && (
                       <Dropdown>
                         <MenuButton
                           slots={{ root: IconButton }}
@@ -123,21 +123,21 @@ const TokensTable = ({
                           </MenuItem>
                         </Menu>
                       </Dropdown>
-                      <Box
-                        sx={(theme) => ({
-                          display: "flex",
-                          "& svg": {
-                            fill: !isCorrectable
-                              ? theme.palette.danger.plainColor
-                              : theme.palette.success.plainColor,
-                          },
-                        })}
-                      >
-                        {!isCorrectable ? <LockIcon /> : <LockOpenIcon />}
-                      </Box>
+                    )}
+                    <Box
+                      sx={(theme) => ({
+                        display: "flex",
+                        "& svg": {
+                          fill: !isCorrectable
+                            ? theme.palette.danger.plainColor
+                            : theme.palette.success.plainColor,
+                        },
+                      })}
+                    >
+                      {!isCorrectable ? <LockIcon /> : <LockOpenIcon />}
                     </Box>
-                  </td>
-                )}
+                  </Box>
+                </td>
                 <td>{String(token.assetId)}</td>
                 <td>
                   <img style={{ height: "30px" }} src={token.logo} alt="" />

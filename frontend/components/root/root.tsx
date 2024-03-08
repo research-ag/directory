@@ -20,6 +20,8 @@ const Root = () => {
 
   const ledgerPrincipal = "rqx66-eyaaa-aaaap-aaona-cai";
 
+  const backendPrincipal = "dgsv4-qyaaa-aaaap-ab3cq-cai";
+
   const { data: freezingPeriod } = useFreezingPeriod();
 
   const freezingPeriodString = useMemo(() => {
@@ -61,8 +63,13 @@ const Root = () => {
           >
             <InfoItem label="Your principal" content={userPrincipal} withCopy />
             <InfoItem
-              label="Ledger's principal"
+              label="Ledger principal"
               content={ledgerPrincipal}
+              withCopy
+            />
+            <InfoItem
+              label="Backend principal"
+              content={backendPrincipal}
               withCopy
             />
             <InfoItem label="Freezing period" content={freezingPeriodString} />
