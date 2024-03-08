@@ -9,7 +9,7 @@ import {
   ethereumLogoBase64,
   bitcoinlogoBase64,
 } from "./constants";
-import { deployCanister } from "./setup";
+import { deployDirectory } from "./setup";
 
 const userIdentity1 = createIdentity("user1"); // initial owner
 const userIdentity2 = createIdentity("user2");
@@ -30,7 +30,7 @@ describe("Directory", () => {
   let actor: Actor<_SERVICE>;
 
   beforeEach(async () => {
-    ({ pic, actor } = await deployCanister({
+    ({ pic, actor } = await deployDirectory({
       initArgs: { initialOwner: userIdentity1.getPrincipal() },
       sender: userIdentity1.getPrincipal(),
     }));
@@ -112,9 +112,9 @@ describe("Directory", () => {
   test("should not allow owners to remove themselves", async () => {
     actor.setIdentity(userIdentity1);
     await actor.addOwner(userIdentity1.getPrincipal());
-    await expect(actor.removeOwner(userIdentity1.getPrincipal()))
-      .rejects
-      .toThrow("Cannot remove yourself from owners");
+    await expect(
+      actor.removeOwner(userIdentity1.getPrincipal())
+    ).rejects.toThrow("Cannot remove yourself from owners");
   });
 
   test("should allow owners to add new token", async () => {

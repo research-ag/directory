@@ -14,12 +14,7 @@ import Base64 "./base64";
 import Http "./tiny_http";
 import Types "./types";
 
-actor class Directory(initialOwner : ?Principal) = self {
-  let ledgerPrincipal : Text = "rqx66-eyaaa-aaaap-aaona-cai";
-
-  let ledgerActor : actor {
-    nFtAssets : shared query () -> async Nat;
-  } = actor (ledgerPrincipal);
+actor class Directory(ledgerPrincipal : Principal, initialOwner : ?Principal) = self {
 
   type TokenIdx = Nat;
 
@@ -211,6 +206,10 @@ actor class Directory(initialOwner : ?Principal) = self {
     };
 
     public func assetIdExistsInLedger(assetId : Nat) : async* () {
+      let ledgerActor : actor {
+        nFtAssets : shared query () -> async Nat;
+      } = actor (Principal.toText(ledgerPrincipal));
+
       if (assetId > nLedgerAssets) {
         nLedgerAssets := await ledgerActor.nFtAssets();
         if (assetId > nLedgerAssets) {

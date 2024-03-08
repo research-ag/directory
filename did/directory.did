@@ -45,7 +45,7 @@ type Request = record {
   url : text;
 };
 
-service : (opt principal) -> {
+service : (principal, opt principal) -> {
   /// All update functions can only be called by registered principals known as "owners", otherwise they will "throw".
   /// The first owner must be supplied by the init argument at first deployment.
   /// During an upgrade the previously exising owners are preserved and any new owner supplied as an init argument is ignored.
