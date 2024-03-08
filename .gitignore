@@ -5,8 +5,11 @@
 **/.DS_Store
 .dfx
 .mops
+.tmp
 node_modules
 declarations
 dist
 .env
 deps
+canister_ids.json
+*.wasm

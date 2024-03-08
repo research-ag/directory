@@ -43,7 +43,7 @@ actor class Directory(initialOwner : ?Principal) = self {
 
   ignore metrics.addPullValue("cached_number_of_ledger_assets", "", func() = nLedgerAssets);
 
-  let freezingPeriod_ = 86_400_000_000_000; // 1 day
+  let freezingPeriod_ = 365 * 86_400_000_000_000; // 1 year
 
   public query func owners() : async [Principal] {
     ownersMap.entries()
@@ -77,6 +77,9 @@ actor class Directory(initialOwner : ?Principal) = self {
   };
 
   public shared ({ caller }) func removeOwner(principal : Principal) : async () {
+    if (Principal.equal(principal, caller)) {
+      throw Error.reject("Cannot remove yourself from owners");
+    };
     await* assertion.ownerAccess(caller);
     ownersMap.delete(principal);
   };
@@ -220,7 +223,7 @@ actor class Directory(initialOwner : ?Principal) = self {
       if (symbol.size() > 8) {
         throw Error.reject("Token symbol cannot be longer than 8 characters");
       };
-      if (Text.contains(symbol, #predicate(func(c) { c > 'z' or (c < 'a' and c > 'Z') or (c < 'A' and c > '9') or (c < '0') }))) {
+      if (Text.contains(symbol, #predicate(func(c) { c > 'z' or (c < 'a' and c > 'Z') or (c < 'A' and c > '9') or c == '/' or c < '-' }))) {
         throw Error.reject("Token symbol can only contain letters and digits");
       };
     };

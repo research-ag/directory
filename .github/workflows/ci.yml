@@ -1,0 +1,79 @@
+name: CI
+env:
+  mops_version: latest
+  dfx_version: 0.17.0
+on:
+  pull_request:
+    branches:
+      - main
+jobs:
+  CI:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ZenVoich/setup-mops@v1
+      - uses: dfinity/setup-dfx@main
+
+      # Check if the backend canister builds from dfx.json
+      - name: Confirm dfx version
+        run: dfx --version
+
+      - name: Build backend canister
+        run: dfx build --check directory
+
+      # Check the backend canister's did file against the one from build
+      # Requires didc to be installed
+      # TODO: Can we make a github action to setup didc?
+      - name: Make bin directory
+        run: mkdir -p /home/runner/bin
+
+      - name: Get didc
+        run: |
+          release=$(curl --silent "https://api.github.com/repos/dfinity/candid/releases/latest" | awk -F\" '/tag_name/ { print $4 }')  	
+          curl -fsSL https://github.com/dfinity/candid/releases/download/$release/didc-linux64 > /home/runner/bin/didc
+          chmod +x /home/runner/bin/didc
+          echo "/home/runner/bin" >> $GITHUB_PATH
+
+      - name: Check backend canister .did file
+        run: didc check -s did/directory.did .dfx/local/canisters/directory/directory.did
+
+      # Run the integration tests with PocketIC
+      # Requires node
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Restore dependencies
+        uses: actions/cache@v4
+        id: yarn-cache
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Install npm dependencies
+        if: steps.yarn-cache.outputs.cache-hit != 'true'
+        run: yarn
+
+      - name: Run integration tests
+        run: |
+          dfx generate directory
+          yarn test
+
+      # Check if the frontend builds
+      - name: Build frontend
+        run: dfx build --check frontend
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        if: steps.yarn-cache.outputs.cache-hit != 'true'
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}

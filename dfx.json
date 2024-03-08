@@ -2,8 +2,9 @@
   "version": 1,
   "canisters": {
     "directory": {
-      "main": "src/main.mo",
       "type": "motoko",
+      "main": "src/main.mo",
+      "did": "did/directory.did",
       "init_arg": "(opt principal \"2vxsx-fae\")",
       "declarations": {
         "bindings": ["js", "ts"],
@@ -11,8 +12,8 @@
       }
     },
     "frontend": {
-      "dependencies": ["directory", "internet_identity"],
       "type": "assets",
+      "dependencies": ["directory"],
       "source": ["dist/"],
       "build": "npm run build:frontend"
     },
@@ -21,17 +22,13 @@
       "candid": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity.did",
       "wasm": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity_dev.wasm.gz",
       "remote": {
-        "candid": "internet_identity.did",
+        "candid": "did/internet_identity.did",
         "id": {
           "ic": "rdmx6-jaaaa-aaaaa-aaadq-cai",
           "playground": "rdmx6-jaaaa-aaaaa-aaadq-cai"
         }
       },
-      "frontend": {},
-      "declarations": {
-        "bindings": ["js", "ts"],
-        "output": "./declarations/internet_identity"
-      }
+      "frontend": {}
     }
   },
   "defaults": {
