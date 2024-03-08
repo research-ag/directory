@@ -73,6 +73,7 @@ jobs:
       - name: Run integration tests
         run: |
           dfx generate directory
+          dfx generate mock_ledger
           yarn test
 
       # Check if the frontend builds
