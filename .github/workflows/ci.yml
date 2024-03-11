@@ -1,7 +1,7 @@
 name: CI
 env:
   mops_version: latest
-  dfx_version: 0.17.0
+  dfx_version: 0.18.0
 on:
   pull_request:
     branches:
@@ -16,8 +16,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: ZenVoich/setup-mops@v1
-      - uses: dfinity/setup-dfx@main
+
+      - name: Install mops
+        uses: ZenVoich/setup-mops@v1
+        with:
+          mops-version: ${{ env.mops_version }}
+
+      - name: Install dfx
+        uses: dfinity/setup-dfx@main
+        with:
+          dfx-version: ${{ env.dfx_version }}
 
       # Check if the backend canister builds from dfx.json
       - name: Confirm dfx version
@@ -65,6 +73,7 @@ jobs:
       - name: Run integration tests
         run: |
           dfx generate directory
+          dfx generate mock_ledger
           yarn test
 
       # Check if the frontend builds

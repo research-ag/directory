@@ -1,4 +1,3 @@
-import { IDL } from "@dfinity/candid";
 import { resolve } from "node:path";
 import { PocketIc } from "@hadronous/pic";
 import { Principal } from "@dfinity/principal";
@@ -6,43 +5,35 @@ import { Principal } from "@dfinity/principal";
 import {
   type _SERVICE,
   idlFactory,
-  init,
-} from "@declarations/directory/directory.did";
-
-interface InitArgs {
-  initialOwner?: Principal;
-}
+} from "@declarations/mock_ledger/mock_ledger.did";
 
 const WASM_PATH = resolve(
   __dirname,
   "..",
+  "..",
   ".dfx",
   "local",
   "canisters",
-  "directory",
-  "directory.wasm"
+  "mock_ledger",
+  "mock_ledger.wasm"
 );
 
 interface DeployOptions {
-  initArgs?: InitArgs;
+  pic: PocketIc;
   sender?: Principal;
 }
 
-export async function deployCanister({
-  initArgs: { initialOwner } = { initialOwner: Principal.anonymous() },
+export async function deployMockLedger({
+  pic,
   sender = Principal.anonymous(),
 }: DeployOptions) {
-  const encodedInitArgs = IDL.encode(init({ IDL }), [[initialOwner]]);
-  const pic = await PocketIc.create();
-
   const fixture = await pic.setupCanister<_SERVICE>({
     idlFactory,
     wasm: WASM_PATH,
-    arg: encodedInitArgs,
     sender,
   });
 
   const actor = fixture.actor;
   const canisterId = fixture.canisterId;
-  return { pic, actor, canisterId };
+  return { actor, canisterId };
 }

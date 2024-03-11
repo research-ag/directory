@@ -5,7 +5,7 @@
       "type": "motoko",
       "main": "src/main.mo",
       "did": "did/directory.did",
-      "init_arg": "(opt principal \"2vxsx-fae\")",
+      "init_arg": "(principal \"rqx66-eyaaa-aaaap-aaona-cai\", opt principal \"2vxsx-fae\")",
       "declarations": {
         "bindings": ["js", "ts"],
         "output": "./declarations/directory"
@@ -15,7 +15,10 @@
       "type": "assets",
       "dependencies": ["directory"],
       "source": ["dist/"],
-      "build": "npm run build:frontend"
+      "build": "npm run build:frontend",
+      "declarations": {
+        "output": "./declarations/frontend"
+      }
     },
     "internet_identity": {
       "type": "custom",
@@ -24,10 +27,22 @@
       "remote": {
         "candid": "did/internet_identity.did",
         "id": {
-          "ic": "rdmx6-jaaaa-aaaaa-aaadq-cai"
+          "ic": "rdmx6-jaaaa-aaaaa-aaadq-cai",
+          "playground": "rdmx6-jaaaa-aaaaa-aaadq-cai"
         }
       },
-      "frontend": {}
+      "frontend": {},
+      "declarations": {
+        "output": "./declarations/internet_identity"
+      }
+    },
+    "mock_ledger": {
+      "type": "motoko",
+      "main": "src/mock_ledger.mo",
+      "declarations": {
+        "bindings": ["js", "ts"],
+        "output": "./declarations/mock_ledger"
+      }
     }
   },
   "defaults": {

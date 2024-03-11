@@ -20,4 +20,8 @@ module {
     name : ?Text;
     logo : ?Text;
   };
+
+  public type LedgerActor = actor {
+    nFtAssets : shared query () -> async Nat;
+  };
 };

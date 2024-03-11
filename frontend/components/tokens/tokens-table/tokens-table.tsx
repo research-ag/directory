@@ -10,6 +10,8 @@ import {
   Tooltip,
 } from "@mui/joy";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+import LockIcon from "@mui/icons-material/Lock";
+import LockOpenIcon from "@mui/icons-material/LockOpen";
 
 import { FungibleToken } from "@declarations/directory/directory.did";
 import { useGetTokens, useIsOwner, useFreezingPeriod } from "@fe/integration";
@@ -38,7 +40,7 @@ const TokensTable = ({
     <Box sx={{ width: "100%", overflow: "auto" }}>
       <Table>
         <colgroup>
-          {isOwner && <col style={{ width: "40px" }} />}
+          <col style={{ width: isOwner ? "100px" : "50px" }} />
           <col style={{ width: "80px" }} />
           <col style={{ width: "70px" }} />
           <col style={{ width: "70px" }} />
@@ -49,7 +51,7 @@ const TokensTable = ({
 
         <thead>
           <tr>
-            {isOwner && <th></th>}
+            <th></th>
             <th>Asset id</th>
             <th>Logo</th>
             <th>Symbol</th>
@@ -64,57 +66,78 @@ const TokensTable = ({
 
             return (
               <tr key={String(token.assetId)}>
-                {isOwner && (
-                  <td>
-                    <Dropdown>
-                      <MenuButton
-                        slots={{ root: IconButton }}
-                        slotProps={{
-                          root: { size: "sm", variant: "outlined" },
-                        }}
-                      >
-                        <MoreVertIcon />
-                      </MenuButton>
-                      <Menu placement="bottom-start">
-                        <Tooltip
-                          title={
-                            !isCorrectable &&
-                            "Time to correct token has expired"
-                          }
-                          disableInteractive
+                <td>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 2,
+                      marginRight: 1,
+                    }}
+                  >
+                    {isOwner && (
+                      <Dropdown>
+                        <MenuButton
+                          slots={{ root: IconButton }}
+                          slotProps={{
+                            root: { size: "sm", variant: "outlined" },
+                          }}
                         >
-                          <Box>
-                            <MenuItem
-                              onClick={() => onCorrectAssetId(token)}
-                              disabled={!isCorrectable}
-                            >
-                              Correct asset id
-                            </MenuItem>
-                          </Box>
-                        </Tooltip>
-                        <Tooltip
-                          title={
-                            !isCorrectable &&
-                            "Time to correct token has expired"
-                          }
-                          disableInteractive
-                        >
-                          <Box>
-                            <MenuItem
-                              onClick={() => onCorrectSymbolId(token)}
-                              disabled={!isCorrectable}
-                            >
-                              Correct symbol
-                            </MenuItem>
-                          </Box>
-                        </Tooltip>
-                        <MenuItem onClick={() => onUpdateTokenInfo(token)}>
-                          Update token info
-                        </MenuItem>
-                      </Menu>
-                    </Dropdown>
-                  </td>
-                )}
+                          <MoreVertIcon />
+                        </MenuButton>
+                        <Menu placement="bottom-start">
+                          <Tooltip
+                            title={
+                              !isCorrectable &&
+                              "Time to correct token has expired"
+                            }
+                            disableInteractive
+                          >
+                            <Box>
+                              <MenuItem
+                                onClick={() => onCorrectAssetId(token)}
+                                disabled={!isCorrectable}
+                              >
+                                Correct asset id
+                              </MenuItem>
+                            </Box>
+                          </Tooltip>
+                          <Tooltip
+                            title={
+                              !isCorrectable &&
+                              "Time to correct token has expired"
+                            }
+                            disableInteractive
+                          >
+                            <Box>
+                              <MenuItem
+                                onClick={() => onCorrectSymbolId(token)}
+                                disabled={!isCorrectable}
+                              >
+                                Correct symbol
+                              </MenuItem>
+                            </Box>
+                          </Tooltip>
+                          <MenuItem onClick={() => onUpdateTokenInfo(token)}>
+                            Update token info
+                          </MenuItem>
+                        </Menu>
+                      </Dropdown>
+                    )}
+                    <Box
+                      sx={(theme) => ({
+                        display: "flex",
+                        "& svg": {
+                          fill: !isCorrectable
+                            ? theme.palette.danger.plainColor
+                            : theme.palette.success.plainColor,
+                        },
+                      })}
+                    >
+                      {!isCorrectable ? <LockIcon /> : <LockOpenIcon />}
+                    </Box>
+                  </Box>
+                </td>
                 <td>{String(token.assetId)}</td>
                 <td>
                   <img style={{ height: "30px" }} src={token.logo} alt="" />

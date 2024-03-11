@@ -30,7 +30,22 @@ type FungibleToken = record {
   modifiedAt : int;
 };
 
-service : (opt principal) -> {
+/// Minified HTTP response data
+type Response = record {
+  body : blob;
+  headers : vec record { text; text };
+  status_code : nat16;
+};
+
+/// Minified HTTP request data
+type Request = record {
+  body : blob;
+  headers : vec record { text; text };
+  method : text;
+  url : text;
+};
+
+service : (principal, opt principal) -> {
   /// All update functions can only be called by registered principals known as "owners", otherwise they will "throw".
   /// The first owner must be supplied by the init argument at first deployment.
   /// During an upgrade the previously exising owners are preserved and any new owner supplied as an init argument is ignored.
@@ -48,7 +63,7 @@ service : (opt principal) -> {
   /// Register a new token
   ///
   /// The function will "throw" if:
-  /// 
+  ///
   /// * any argument field is invalid
   /// * the symbol is already in use
   /// * the asset id is already in use
@@ -60,7 +75,7 @@ service : (opt principal) -> {
   /// updated.
   ///
   /// The function will "throw" if:
-  /// 
+  ///
   /// * the asset id is not known
   /// * any field in the update argument is invalid
   updateToken : (nat, UpdateArgument) -> ();
@@ -70,7 +85,7 @@ service : (opt principal) -> {
   /// The arguments are:
   ///
   /// * the symbol used to identify the token
-  /// * the new (corrected) asset id 
+  /// * the new (corrected) asset id
   ///
   /// This and the function below are intended for when a mistake happened
   /// during registration of a new token. A correction can only be done during a
@@ -82,13 +97,13 @@ service : (opt principal) -> {
   /// * the new asset id is the same as the current one
   /// * the new asset id already belongs to a different symbol
   correctAssetId : (text, nat) -> ();
-  
+
   /// Correct an incorrect symbol
   ///
   /// The arguments are:
   ///
   /// * the asset id used to identify the token
-  /// * the new (corrected) symbol 
+  /// * the new (corrected) symbol
   ///
   /// The functions throws if:
   ///
@@ -122,4 +137,7 @@ service : (opt principal) -> {
 
   /// Get all owner's principals
   owners : () -> (vec principal) query;
+
+  /// HTTP request to canister
+  http_request : (Request) -> (Response) query;
 };

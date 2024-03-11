@@ -8,11 +8,14 @@ import Result "mo:base/Result";
 import Text "mo:base/Text";
 import Time "mo:base/Time";
 import Vector "mo:vector/Class";
+import PT "mo:promtracker";
 
 import Base64 "./base64";
+import Http "./tiny_http";
 import Types "./types";
 
-actor class Directory(initialOwner : ?Principal) {
+actor class Directory(ledgerPrincipal : Principal, initialOwner : ?Principal) = self {
+
   type TokenIdx = Nat;
 
   let ownersMap = RBTree.RBTree<Principal, ()>(Principal.compare);
@@ -22,10 +25,18 @@ actor class Directory(initialOwner : ?Principal) {
 
   ignore do ? { ownersMap.put(initialOwner!, ()) };
 
+  let metrics = PT.PromTracker("", 65);
+  metrics.addSystemValues();
+  ignore metrics.addPullValue("number_of_registered_tokens", "", tokens.size);
+
   stable var stableOwnersMap = ownersMap.share();
   stable var stableAssetIdMap = assetIdMap.share();
   stable var stableKeyMap = keyMap.share();
   stable var stableTokens = tokens.share();
+  stable var stableMetrics = metrics.share();
+  stable var nLedgerAssets = 0;
+
+  ignore metrics.addPullValue("cached_number_of_ledger_assets", "", func() = nLedgerAssets);
 
   let freezingPeriod_ = 365 * 86_400_000_000_000; // 1 year
 
@@ -77,6 +88,7 @@ actor class Directory(initialOwner : ?Principal) {
     await* assertion.validName(name);
     await* assertion.validImage(logo);
     await* assertion.tokenNew(assetId, key);
+    await* assertion.assetIdExistsInLedger(assetId);
 
     let newIndex = tokens.size();
     assetIdMap.put(assetId, newIndex);
@@ -130,6 +142,8 @@ actor class Directory(initialOwner : ?Principal) {
 
     if (newAssetId == token.assetId) throw Error.reject("New asset id is the same as the current one");
     if (assetIdMap.get(newAssetId) != null) throw Error.reject("New asset id already exists");
+
+    await* assertion.assetIdExistsInLedger(newAssetId);
 
     assetIdMap.delete(token.assetId);
     assetIdMap.put(newAssetId, index);
@@ -191,6 +205,19 @@ actor class Directory(initialOwner : ?Principal) {
       };
     };
 
+    public func assetIdExistsInLedger(assetId : Nat) : async* () {
+      let ledgerActor : actor {
+        nFtAssets : shared query () -> async Nat;
+      } = actor (Principal.toText(ledgerPrincipal));
+
+      if (assetId > nLedgerAssets) {
+        nLedgerAssets := await ledgerActor.nFtAssets();
+        if (assetId > nLedgerAssets) {
+          throw Error.reject("Asset id does not exist in the ledger");
+        };
+      };
+    };
+
     public func validSymbol(symbol : Text) : async* () {
       if (symbol.size() > 8) {
         throw Error.reject("Token symbol cannot be longer than 8 characters");
@@ -219,6 +246,7 @@ actor class Directory(initialOwner : ?Principal) {
     stableAssetIdMap := assetIdMap.share();
     stableKeyMap := keyMap.share();
     stableTokens := tokens.share();
+    stableMetrics := metrics.share();
   };
 
   system func postupgrade() {
@@ -226,6 +254,15 @@ actor class Directory(initialOwner : ?Principal) {
     assetIdMap.unshare(stableAssetIdMap);
     keyMap.unshare(stableKeyMap);
     tokens.unshare(stableTokens);
+    metrics.unshare(stableMetrics);
   };
 
+  public query func http_request(req : Http.Request) : async Http.Response {
+    let ?path = Text.split(req.url, #char '?').next() else return Http.render400();
+    let labels = "canister=\"" # PT.shortName(self) # "\"";
+    switch (req.method, path) {
+      case ("GET", "/metrics") Http.renderPlainText(metrics.renderExposition(labels));
+      case (_) Http.render400();
+    };
+  };
 };

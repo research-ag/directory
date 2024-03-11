@@ -33,7 +33,8 @@ const ConnectButton = () => {
         setIdentity(identity);
       },
       identityProvider:
-        process.env.DFX_NETWORK === "ic"
+        process.env.DFX_NETWORK === "ic" ||
+        process.env.DFX_NETWORK === "playground"
           ? "https://identity.ic0.app/#authorize"
           : `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943/#authorize`,
       windowOpenerFeatures:

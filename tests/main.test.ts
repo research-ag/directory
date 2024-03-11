@@ -9,7 +9,7 @@ import {
   ethereumLogoBase64,
   bitcoinlogoBase64,
 } from "./constants";
-import { deployCanister } from "./setup";
+import { deployDirectory } from "./setup";
 
 const userIdentity1 = createIdentity("user1"); // initial owner
 const userIdentity2 = createIdentity("user2");
@@ -30,7 +30,7 @@ describe("Directory", () => {
   let actor: Actor<_SERVICE>;
 
   beforeEach(async () => {
-    ({ pic, actor } = await deployCanister({
+    ({ pic, actor } = await deployDirectory({
       initArgs: { initialOwner: userIdentity1.getPrincipal() },
       sender: userIdentity1.getPrincipal(),
     }));
@@ -86,7 +86,7 @@ describe("Directory", () => {
 
   test("should allow owners to add new owner", async () => {
     actor.setIdentity(userIdentity2);
-    expect(actor.addToken(btcCreatePayload)).rejects.toThrow();
+    await expect(actor.addToken(btcCreatePayload)).rejects.toThrow();
 
     actor.setIdentity(userIdentity1);
     await actor.addOwner(userIdentity2.getPrincipal());
@@ -106,15 +106,15 @@ describe("Directory", () => {
     await actor.removeOwner(userIdentity2.getPrincipal());
 
     actor.setIdentity(userIdentity2);
-    expect(actor.addToken(ethCreatePayload)).rejects.toThrow();
+    await expect(actor.addToken(ethCreatePayload)).rejects.toThrow();
   });
 
   test("should not allow owners to remove themselves", async () => {
     actor.setIdentity(userIdentity1);
     await actor.addOwner(userIdentity1.getPrincipal());
-    await expect(actor.removeOwner(userIdentity1.getPrincipal()))
-      .rejects
-      .toThrow("Cannot remove yourself from owners");
+    await expect(
+      actor.removeOwner(userIdentity1.getPrincipal())
+    ).rejects.toThrow("Cannot remove yourself from owners");
   });
 
   test("should allow owners to add new token", async () => {
@@ -156,7 +156,7 @@ describe("Directory", () => {
     await actor.correctAssetId(btcCreatePayload.symbol, newAssetId++);
     await pic.setTime(createdTime + freezingPeriod);
     const promise = actor.correctAssetId(btcCreatePayload.symbol, newAssetId++);
-    expect(promise).rejects.toThrow();
+    await expect(promise).rejects.toThrow();
   });
 
   test("should allow owners to update token non-id info at any time", async () => {
@@ -189,9 +189,9 @@ describe("Directory", () => {
 
     actor.setIdentity(userIdentity2);
     let promise = actor.addOwner(userIdentity4.getPrincipal());
-    expect(promise).rejects.toThrow();
+    await expect(promise).rejects.toThrow();
     promise = actor.removeOwner(userIdentity3.getPrincipal());
-    expect(promise).rejects.toThrow();
+    await expect(promise).rejects.toThrow();
   });
 
   test("should not allow non-owners to manage tokens", async () => {
@@ -200,17 +200,17 @@ describe("Directory", () => {
 
     actor.setIdentity(userIdentity2);
     let promise = actor.addToken(ethCreatePayload);
-    expect(promise).rejects.toThrow();
+    await expect(promise).rejects.toThrow();
     promise = actor.correctAssetId(ethCreatePayload.symbol, 10n);
-    expect(promise).rejects.toThrow();
+    await expect(promise).rejects.toThrow();
     promise = actor.correctSymbol(ethCreatePayload.assetId, "XXX");
-    expect(promise).rejects.toThrow();
+    await expect(promise).rejects.toThrow();
     promise = actor.updateToken(ethCreatePayload.assetId, {
       logo: [],
       name: ["XXX"],
       symbol: [],
     });
-    expect(promise).rejects.toThrow();
+    await expect(promise).rejects.toThrow();
   });
 
   test("should not allow owners to add token with invalid input", async () => {
@@ -218,16 +218,16 @@ describe("Directory", () => {
     let logo =
       bitcoinlogoBase64.slice(0, 100) + "!" + bitcoinlogoBase64.slice(102);
     let promise = actor.addToken({ ...btcCreatePayload, logo });
-    expect(promise).rejects.toThrow();
+    await expect(promise).rejects.toThrow();
     logo = "x".repeat(100);
     promise = actor.addToken({ ...btcCreatePayload, logo });
-    expect(promise).rejects.toThrow();
+    await expect(promise).rejects.toThrow();
     const name = "x".repeat(100);
     promise = actor.addToken({ ...btcCreatePayload, name });
-    expect(promise).rejects.toThrow();
+    await expect(promise).rejects.toThrow();
     const symbol = "x".repeat(10);
     promise = actor.addToken({ ...btcCreatePayload, symbol });
-    expect(promise).rejects.toThrow();
+    await expect(promise).rejects.toThrow();
   });
 
   test("should not allow owners to add existing token", async () => {
@@ -239,13 +239,21 @@ describe("Directory", () => {
       assetId: token!.assetId,
       symbol: "XXX",
     });
-    expect(promise).rejects.toThrow();
+    await expect(promise).rejects.toThrow();
     promise = actor.addToken({
       ...btcCreatePayload,
       assetId: 100n,
       symbol: token!.symbol,
     });
-    expect(promise).rejects.toThrow();
+    await expect(promise).rejects.toThrow();
+  });
+
+  test("should not allow owners to add token with asset id not existing in the ledger", async () => {
+    actor.setIdentity(userIdentity1);
+    let promise = actor.addToken({ ...btcCreatePayload, assetId: BigInt(101) }); // Mock ledger returns 100 of assets
+    await expect(promise).rejects.toThrow(
+      "Asset id does not exist in the ledger"
+    );
   });
 
   test("should not allow owners to correct token with invalid input", async () => {
@@ -253,7 +261,7 @@ describe("Directory", () => {
     await actor.addToken(btcCreatePayload);
     const [token] = await actor.tokenByAssetId(btcCreatePayload.assetId);
     let promise = actor.correctSymbol(token!.assetId, "x".repeat(100));
-    expect(promise).rejects.toThrow();
+    await expect(promise).rejects.toThrow();
   });
 
   test("should not allow owners to correct token with existing asset id / key", async () => {
@@ -264,12 +272,12 @@ describe("Directory", () => {
       btcCreatePayload.symbol,
       ethCreatePayload.assetId
     );
-    expect(promise).rejects.toThrow();
+    await expect(promise).rejects.toThrow();
     promise = actor.correctSymbol(
       btcCreatePayload.assetId,
       ethCreatePayload.symbol
     );
-    expect(promise).rejects.toThrow();
+    await expect(promise).rejects.toThrow();
   });
 
   test("should allow owners to update symbol capitalization after freezing period", async () => {
@@ -286,7 +294,7 @@ describe("Directory", () => {
       symbol: [newSymbol],
     });
     [token] = await actor.tokenByAssetId(btcCreatePayload.assetId);
-    expect(token?.symbol === newSymbol).toEqual(true);
+    await expect(token?.symbol === newSymbol).toEqual(true);
   });
 
   test("should not allow owners to update token with invalid input", async () => {
@@ -299,27 +307,27 @@ describe("Directory", () => {
       name: [],
       symbol: [],
     });
-    expect(promise).rejects.toThrow();
+    await expect(promise).rejects.toThrow();
     logo = "x".repeat(100);
     promise = actor.updateToken(btcCreatePayload.assetId, {
       logo: [logo],
       name: [],
       symbol: [],
     });
-    expect(promise).rejects.toThrow();
+    await expect(promise).rejects.toThrow();
     const name = "x".repeat(100);
     promise = actor.updateToken(btcCreatePayload.assetId, {
       logo: [],
       name: [name],
       symbol: [],
     });
-    expect(promise).rejects.toThrow();
+    await expect(promise).rejects.toThrow();
     const symbol = "x".repeat(10);
     promise = actor.updateToken(btcCreatePayload.assetId, {
       logo: [],
       name: [],
       symbol: [symbol],
     });
-    expect(promise).rejects.toThrow();
+    await expect(promise).rejects.toThrow();
   });
 });
