@@ -18,7 +18,7 @@
     "@dfinity/candid": "^1.0.1",
     "@dfinity/identity": "^1.0.1",
     "@dfinity/principal": "^1.0.1",
-    "@hadronous/pic": "^0.4.0",
+    "@hadronous/pic": "^0.6.0",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.11.19",
     "@types/react": "^18.2.55",
