@@ -1,7 +1,7 @@
 name: CI
 env:
   mops_version: latest
-  dfx_version: 0.17.0
+  dfx_version: 0.18.0
 on:
   pull_request:
     branches:
