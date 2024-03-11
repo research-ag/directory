@@ -248,6 +248,12 @@ describe("Directory", () => {
     expect(promise).rejects.toThrow();
   });
 
+  test("should not allow owners to add token with asset id not existing in the ledger", async () => {
+    actor.setIdentity(userIdentity1);
+    let promise = actor.addToken({ ...btcCreatePayload, assetId: BigInt(101) }); // Mock ledger returns 100 of assets
+    expect(promise).rejects.toThrow("Asset id does not exist in the ledger");
+  });
+
   test("should not allow owners to correct token with invalid input", async () => {
     actor.setIdentity(userIdentity1);
     await actor.addToken(btcCreatePayload);
