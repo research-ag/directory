@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { format, differenceInHours, formatDuration } from "date-fns";
+import { differenceInHours, formatDuration } from "date-fns";
 import { Box, Tabs, TabList, Tab } from "@mui/joy";
 
 import Tokens from "@fe/components/tokens";
@@ -7,7 +7,11 @@ import Owners from "@fe/components/owners";
 import ConnectButton from "@fe/components/connect-button";
 import ThemeButton from "@fe/components/theme-button";
 import { useIdentity } from "@fe/integration/identity";
-import { useFreezingPeriod } from "@fe/integration";
+import {
+  useFreezingPeriod,
+  useLedgerPrincipal,
+  BACKEND_CANISTER_ID,
+} from "@fe/integration";
 
 import InfoItem from "./info-item";
 
@@ -18,9 +22,8 @@ const Root = () => {
 
   const userPrincipal = identity.getPrincipal().toText();
 
-  const ledgerPrincipal = "rqx66-eyaaa-aaaap-aaona-cai";
-
-  const backendPrincipal = "dgsv4-qyaaa-aaaap-ab3cq-cai";
+  const { data: ledgerPrincipal_ } = useLedgerPrincipal();
+  const ledgerPrincipal = ledgerPrincipal_ ? ledgerPrincipal_.toText() : "N/A";
 
   const { data: freezingPeriod } = useFreezingPeriod();
 
@@ -69,7 +72,7 @@ const Root = () => {
             />
             <InfoItem
               label="Backend principal"
-              content={backendPrincipal}
+              content={BACKEND_CANISTER_ID}
               withCopy
             />
             <InfoItem label="Freezing period" content={freezingPeriodString} />
