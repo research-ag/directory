@@ -135,6 +135,9 @@ service : (principal, opt principal) -> {
   /// Get the freezing period in nanoseconds (should be 24h)
   freezingPeriod : () -> (nat) query;
 
+  /// Get the ledger principal
+  ledgerPrincipal : () -> (principal) query;
+
   /// Get all owner's principals
   owners : () -> (vec principal) query;
 
