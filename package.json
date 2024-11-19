@@ -7,7 +7,7 @@
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {
-    "setup": "dfx canister create --all && dfx build internet_identity && dfx generate && dfx deploy",
+    "setup": "dfx canister create --all && dfx build --check frontend && dfx build internet_identity && dfx generate && dfx deploy",
     "dev:frontend": "vite --port 3993 --host",
     "dev:directory": "mo-dev --generate --deploy -y directory",
     "build:frontend": "tsc && vite build",

@@ -4,7 +4,6 @@ import Nat "mo:base/Nat";
 import Option "mo:base/Option";
 import Principal "mo:base/Principal";
 import RBTree "mo:base/RBTree";
-import Result "mo:base/Result";
 import Text "mo:base/Text";
 import Time "mo:base/Time";
 import Vector "mo:vector/Class";
@@ -14,7 +13,7 @@ import Base64 "./base64";
 import Http "./tiny_http";
 import Types "./types";
 
-actor class Directory(ledgerPrincipal : Principal, initialOwner : ?Principal) = self {
+actor class Directory(ledgerPrincipal_ : Principal, initialOwner : ?Principal) = self {
 
   type TokenIdx = Nat;
 
@@ -39,6 +38,10 @@ actor class Directory(ledgerPrincipal : Principal, initialOwner : ?Principal) = 
   ignore metrics.addPullValue("cached_number_of_ledger_assets", "", func() = nLedgerAssets);
 
   let freezingPeriod_ = 365 * 86_400_000_000_000; // 1 year
+
+  public query func ledgerPrincipal() : async Principal {
+    ledgerPrincipal_;
+  };
 
   public query func owners() : async [Principal] {
     ownersMap.entries()
@@ -208,7 +211,7 @@ actor class Directory(ledgerPrincipal : Principal, initialOwner : ?Principal) = 
     public func assetIdExistsInLedger(assetId : Nat) : async* () {
       let ledgerActor : actor {
         nFtAssets : shared query () -> async Nat;
-      } = actor (Principal.toText(ledgerPrincipal));
+      } = actor (Principal.toText(ledgerPrincipal_));
 
       if (assetId > nLedgerAssets) {
         nLedgerAssets := await ledgerActor.nFtAssets();

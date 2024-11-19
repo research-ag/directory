@@ -7,6 +7,8 @@ import { UpdatePayload, _SERVICE } from "@declarations/directory/directory.did";
 
 import { useIdentity } from "./identity";
 
+export const BACKEND_CANISTER_ID = canisterId;
+
 export const useDirectoryBackend = () => {
   const { identity } = useIdentity();
 
@@ -124,6 +126,18 @@ export const useFreezingPeriod = () => {
   return useQuery("freezing-period", () => directory.freezingPeriod(), {
     onError: () => {
       enqueueSnackbar("Failed to fetch freezing period", { variant: "error" });
+    },
+  });
+};
+
+export const useLedgerPrincipal = () => {
+  const { directory } = useDirectoryBackend();
+
+  const { enqueueSnackbar } = useSnackbar();
+
+  return useQuery("ledger-principal", () => directory.ledgerPrincipal(), {
+    onError: () => {
+      enqueueSnackbar("Failed to fetch ledger principal", { variant: "error" });
     },
   });
 };
